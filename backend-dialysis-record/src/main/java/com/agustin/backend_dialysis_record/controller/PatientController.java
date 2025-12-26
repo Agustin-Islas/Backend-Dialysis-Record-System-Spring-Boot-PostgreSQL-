@@ -1,9 +1,7 @@
 package com.agustin.backend_dialysis_record.controller;
 
-import com.agustin.backend_dialysis_record.dto.DoctorDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
 import com.agustin.backend_dialysis_record.dto.SessionDto;
-import com.agustin.backend_dialysis_record.model.Patient;
 import com.agustin.backend_dialysis_record.service.PatientService;
 import com.agustin.backend_dialysis_record.service.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -27,8 +26,8 @@ public class PatientController {
 
     //get ultrafilter
 
-    @PatchMapping("{patientId}/activate")
-    public ResponseEntity<PatientDto> activatePatient(@PathVariable("patientId") Long patientId){
+    @PatchMapping("/{patientId}/activate")
+    public ResponseEntity<PatientDto> activatePatient(@PathVariable("patientId") UUID patientId){
         PatientDto patientDto = patientService.activate(patientId);
         return ResponseEntity.ok(patientDto);
     }
@@ -47,26 +46,26 @@ public class PatientController {
     }
 
     @GetMapping("/{patientId}")
-    public ResponseEntity<PatientDto> getPatientById(@PathVariable long patientId) {
+    public ResponseEntity<PatientDto> getPatientById(@PathVariable UUID patientId) {
         PatientDto patient = patientService.findById(patientId);
         return ResponseEntity.ok().body(patient);
     }
 
     @PutMapping("/{patientId}")
-    public ResponseEntity<PatientDto> update(@PathVariable long patientId, @RequestBody PatientDto patientDto) {
+    public ResponseEntity<PatientDto> update(@PathVariable UUID patientId, @RequestBody PatientDto patientDto) {
         PatientDto patient = patientService.update(patientId, patientDto);
         return ResponseEntity.ok().body(patient);
     }
 
     @DeleteMapping("/{patientId}")
-    public ResponseEntity<Void> delete(@PathVariable("patientId") long patientId) {
+    public ResponseEntity<Void> delete(@PathVariable("patientId") UUID patientId) {
         patientService.delete(patientId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{patientId}/sessions")
     public ResponseEntity<List<SessionDto>> getSessions(
-                                                    @PathVariable Long patientId,
+                                                    @PathVariable UUID patientId,
                                                     @RequestParam(required = false) LocalDate startDate,
                                                     @RequestParam(required = false) LocalDate endDate) {
         if (startDate != null && endDate != null) {
@@ -77,7 +76,7 @@ public class PatientController {
 
 
     @GetMapping("/{patientId}/sessions/day/{day}")
-    public ResponseEntity<List<SessionDto>> getSessionsByDay(@PathVariable long patientId,
+    public ResponseEntity<List<SessionDto>> getSessionsByDay(@PathVariable UUID patientId,
                                                              @PathVariable LocalDate day) {
         return ResponseEntity.ok(sessionService.findSessionsByDay(patientId, day));
     }

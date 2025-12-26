@@ -3,7 +3,6 @@ package com.agustin.backend_dialysis_record.mapper;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
 import com.agustin.backend_dialysis_record.model.Doctor;
 import com.agustin.backend_dialysis_record.model.Patient;
-import com.agustin.backend_dialysis_record.model.Session;
 import com.agustin.backend_dialysis_record.repository.DoctorRepository;
 import com.agustin.backend_dialysis_record.repository.SessionRepository;
 import org.springframework.stereotype.Component;
@@ -55,9 +54,12 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patientDto.setAddress(patient.getAddress());
         patientDto.setNumber(patient.getNumber());
         patientDto.setEmail(patient.getEmail());
-        patientDto.setDoctorName(patient.getDoctor().getName());
-        patientDto.setDoctorId(patient.getDoctor().getId());
-
+        if (patientDto.getDoctorId() != null) {
+            patientDto.setDoctorName(patient.getDoctor().getName());
+            patientDto.setDoctorId(patient.getDoctor().getId());
+        } else {
+            patient.setDoctor(null);
+        }
         return patientDto;
     }
 
@@ -72,8 +74,10 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patient.setAddress(patientDto.getAddress());
         patient.setNumber(patientDto.getNumber());
         patient.setEmail(patientDto.getEmail());
-        Doctor doctor = doctorRepository.getReferenceById(patientDto.getDoctorId());
-        patient.setDoctor(doctor);
+        if (patientDto.getDoctorId() != null) {
+            Doctor doctor = doctorRepository.getReferenceById(patientDto.getDoctorId());
+            patient.setDoctor(doctor);
+        }
         //List<Session> sessions = sessionRepository.findByPatientIdOrderByDateDesc(patient.getId());
         //patient.setSessions(sessions);
     }

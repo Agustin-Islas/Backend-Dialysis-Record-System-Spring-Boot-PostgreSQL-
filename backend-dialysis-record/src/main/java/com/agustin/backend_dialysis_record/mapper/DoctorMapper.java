@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class DoctorMapper implements GenericMapper<Doctor, DoctorDto> {
@@ -40,7 +41,7 @@ public class DoctorMapper implements GenericMapper<Doctor, DoctorDto> {
         doctorDto.setSurname(doctor.getSurname());
         doctorDto.setEmail(doctor.getEmail());
 
-        List<Long> patientIds = new ArrayList<>();
+        List<UUID> patientIds = new ArrayList<>();
         if (doctor.getPatients() != null && !doctor.getPatients().isEmpty()) {
             for (Patient patient: doctor.getPatients()) {
                 patientIds.add(patient.getId());

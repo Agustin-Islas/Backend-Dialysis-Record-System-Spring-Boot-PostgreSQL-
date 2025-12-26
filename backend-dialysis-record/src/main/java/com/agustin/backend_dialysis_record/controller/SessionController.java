@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/sessions")
@@ -33,19 +34,19 @@ public class SessionController {
     }
 
     @GetMapping("/{sessionId}")
-    public ResponseEntity<SessionDto> getSessionById(@PathVariable long sessionId) {
+    public ResponseEntity<SessionDto> getSessionById(@PathVariable UUID sessionId) {
         SessionDto session = sessionService.findById(sessionId);
         return ResponseEntity.ok().body(session);
     }
 
     @PutMapping("/{sessionId}")
-    public ResponseEntity<SessionDto> update(@PathVariable long sessionId, @RequestBody SessionDto sessionDto) {
+    public ResponseEntity<SessionDto> update(@PathVariable UUID sessionId, @RequestBody SessionDto sessionDto) {
         SessionDto session = sessionService.update(sessionId, sessionDto);
         return ResponseEntity.ok().body(session);
     }
 
     @DeleteMapping("/{sessionId}")
-    public ResponseEntity<Void> delete(@PathVariable long sessionId) {
+    public ResponseEntity<Void> delete(@PathVariable UUID sessionId) {
         sessionService.delete(sessionId);
         return ResponseEntity.noContent().build();
     }

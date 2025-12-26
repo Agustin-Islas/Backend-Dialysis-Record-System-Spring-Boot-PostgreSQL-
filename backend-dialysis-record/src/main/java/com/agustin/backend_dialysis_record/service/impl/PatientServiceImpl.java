@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class PatientServiceImpl implements PatientService {
@@ -33,7 +34,7 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public PatientDto findById(Long id) {
+    public PatientDto findById(UUID id) {
         return patientRepository.findById(id).map(patientMapper::toDto)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + id));
     }
@@ -45,7 +46,7 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public PatientDto update(Long id, PatientDto patientDto) {
+    public PatientDto update(UUID id, PatientDto patientDto) {
         if (patientDto.getId() != null && !patientDto.getId().equals(id))
             throw new IllegalArgumentException("Path id and DTO id must match");
 
@@ -57,7 +58,7 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(UUID id) {
         if (!patientRepository.existsById(id))
             throw new RuntimeException("Patient not found with id: " + id);
 
@@ -70,7 +71,7 @@ public class PatientServiceImpl implements PatientService {
         patientRepository.deleteById(id);
     }
 
-    public PatientDto activate(Long patientId) {
+    public PatientDto activate(UUID patientId) {
         Patient patient = patientRepository.findByIdIncludingInactive(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + patientId));
         patient.setActive(true);

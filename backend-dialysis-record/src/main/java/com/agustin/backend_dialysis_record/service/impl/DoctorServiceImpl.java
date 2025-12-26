@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class DoctorServiceImpl implements DoctorService {
@@ -38,7 +39,7 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public DoctorDto findById(Long id) {
+    public DoctorDto findById(UUID id) {
         return doctorRepository.findById(id)
                 .map(doctorMapper::toDto)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
@@ -52,7 +53,7 @@ public class DoctorServiceImpl implements DoctorService {
         }
 
     @Override
-    public DoctorDto update(Long id, DoctorDto doctorDto) {
+    public DoctorDto update(UUID id, DoctorDto doctorDto) {
         if (doctorDto.getId() != null && !doctorDto.getId().equals(id))
             throw new IllegalArgumentException("Path id and DTO id must match");
 
@@ -64,13 +65,13 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(UUID id) {
         if (!doctorRepository.existsById(id))
             throw new RuntimeException("Doctor not found with id: " + id);
         doctorRepository.deleteById(id);
     }
 
-    public PatientDto addPatientToDoctor(Long doctorId, Long patientId) {
+    public PatientDto addPatientToDoctor(UUID doctorId, UUID patientId) {
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
 
@@ -79,14 +80,14 @@ public class DoctorServiceImpl implements DoctorService {
         return patientDto;
     }
 
-    public void removePatientFromDoctor(Long doctorId, Long patientId) {
+    public void removePatientFromDoctor(UUID doctorId, UUID patientId) {
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
         Patient patient = patientMapper.toEntity(patientService.findById(patientId));
         doctor.removePatient(patient);
     }
 
-    public DoctorDto activate(Long doctorId) {
+    public DoctorDto activate(UUID doctorId) {
         Doctor doctor = doctorRepository.findByIdIncludingInactive(doctorId)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
         doctor.setActive(true);

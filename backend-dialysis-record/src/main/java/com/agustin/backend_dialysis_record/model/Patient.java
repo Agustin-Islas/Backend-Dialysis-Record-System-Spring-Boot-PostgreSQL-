@@ -9,6 +9,7 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -18,8 +19,8 @@ import java.util.List;
 @SQLRestriction("active = true")
 public class Patient {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, updatable = false)
+    private UUID id;
 
     @Column(nullable = false)
     private boolean active = true;
@@ -31,9 +32,10 @@ public class Patient {
     private String address;
     private int number;
     private String email;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doctor_id")
     private Doctor doctor;
-    @OneToMany(mappedBy = "patient")
+    @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<Session>();
 
     public Patient(String name, String surname, int dni,
@@ -51,5 +53,10 @@ public class Patient {
     public void addSession(Session session) {
         sessions.add(session);
         session.setPatient(this);
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (id == null) id = UUID.randomUUID();
     }
 }

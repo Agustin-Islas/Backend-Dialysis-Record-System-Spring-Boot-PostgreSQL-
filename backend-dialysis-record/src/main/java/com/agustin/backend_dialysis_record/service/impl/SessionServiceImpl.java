@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class SessionServiceImpl implements SessionService {
@@ -29,7 +30,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public SessionDto findById(Long id) {
+    public SessionDto findById(UUID id) {
         return sessionRepository.findById(id)
                 .map(sessionMapper::toDto)
                 .orElseThrow(() -> new RuntimeException("Session not found with id: " + id));
@@ -43,7 +44,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public SessionDto update(Long id, SessionDto sessionDto) {
+    public SessionDto update(UUID id, SessionDto sessionDto) {
         if (sessionDto.getId() != null && !sessionDto.getId().equals(id))
             throw new IllegalArgumentException("Path id and DTO id must match");
 
@@ -55,27 +56,27 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(UUID id) {
         if (!sessionRepository.existsById(id))
             throw new RuntimeException("Session not found with id: " + id);
         sessionRepository.deleteById(id);
     }
 
     @Override
-    public List<SessionDto> findSessionsByPatientId(Long patientId) { //TODO: CHECK NULLS
+    public List<SessionDto> findSessionsByPatientId(UUID patientId) { //TODO: CHECK NULLS
         return sessionRepository.findByPatientIdOrderByDateDesc(patientId)
                 .stream().map(sessionMapper::toDto).toList();
     }
 
     @Override
-    public List<SessionDto> findSessionsByPatientIdAndDateRange(Long patientId, LocalDate startDate, LocalDate endDate) {
+    public List<SessionDto> findSessionsByPatientIdAndDateRange(UUID patientId, LocalDate startDate, LocalDate endDate) {
         List<SessionDto> sessions = findSessionsByPatientId(patientId);
         return sessions.stream().filter(
                 sessionDto -> sessionDto.getDate().isAfter(startDate) && sessionDto.getDate().equals(endDate)).toList();
     }
 
     @Override
-    public List<SessionDto> findSessionsByDay(Long patientId, LocalDate day) { //TODO: CHECK NULLS
+    public List<SessionDto> findSessionsByDay(UUID patientId, LocalDate day) { //TODO: CHECK NULLS
         return findSessionsByPatientId(patientId)
                 .stream().filter(session -> session.getDate().equals(day)).toList();
     }

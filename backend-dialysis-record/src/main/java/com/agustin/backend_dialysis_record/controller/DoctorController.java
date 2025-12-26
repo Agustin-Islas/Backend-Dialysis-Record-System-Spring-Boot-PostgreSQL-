@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/doctors")
@@ -19,20 +20,20 @@ public class DoctorController {
         this.doctorService = doctorService;
     }
 
-    @PatchMapping("{doctorId}/activate")
-    public ResponseEntity<DoctorDto> activateDoctor(@PathVariable("doctorId") Long doctorId){
+    @PatchMapping("/{doctorId}/activate")
+    public ResponseEntity<DoctorDto> activateDoctor(@PathVariable("doctorId") UUID doctorId){
         DoctorDto doctorDto = doctorService.activate(doctorId);
         return ResponseEntity.ok(doctorDto);
     }
 
     @PostMapping("/{doctorId}/patients/{patientId}")
-    public ResponseEntity<PatientDto> addPatient(@PathVariable Long doctorId, @PathVariable Long patientId) {
+    public ResponseEntity<PatientDto> addPatient(@PathVariable UUID doctorId, @PathVariable UUID patientId) {
         PatientDto savedPatient = doctorService.addPatientToDoctor(doctorId, patientId);
         return ResponseEntity.ok(savedPatient);
     }
 
     @DeleteMapping("/{doctorId}/patients/{patientId}")
-    public ResponseEntity<Void> removePatient(@PathVariable Long doctorId, @PathVariable Long patientId) {
+    public ResponseEntity<Void> removePatient(@PathVariable UUID doctorId, @PathVariable UUID patientId) {
         doctorService.removePatientFromDoctor(doctorId, patientId);
         return ResponseEntity.noContent().build();
     }
@@ -50,19 +51,19 @@ public class DoctorController {
     }
 
     @GetMapping("/{doctorId}")
-    public ResponseEntity<DoctorDto> getDoctorById(@PathVariable long doctorId) {
+    public ResponseEntity<DoctorDto> getDoctorById(@PathVariable UUID doctorId) {
         DoctorDto doctor = doctorService.findById(doctorId);
         return ResponseEntity.ok().body(doctor);
     }
 
     @PutMapping("/{doctorId}")
-    public ResponseEntity<DoctorDto> updateDoctor(@PathVariable Long doctorId, @RequestBody DoctorDto doctorDto) {
+    public ResponseEntity<DoctorDto> updateDoctor(@PathVariable UUID doctorId, @RequestBody DoctorDto doctorDto) {
         DoctorDto doctor = doctorService.update(doctorId, doctorDto);
         return ResponseEntity.ok().body(doctor);
     }
 
     @DeleteMapping("/{doctorId}")
-    public ResponseEntity<Void> deleteDoctorById(@PathVariable long doctorId) {
+    public ResponseEntity<Void> deleteDoctorById(@PathVariable UUID doctorId) {
         doctorService.delete(doctorId);
         return ResponseEntity.noContent().build();
     }

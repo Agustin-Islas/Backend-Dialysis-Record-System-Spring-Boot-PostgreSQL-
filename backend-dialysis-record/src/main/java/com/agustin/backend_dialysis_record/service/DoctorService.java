@@ -4,21 +4,22 @@ import com.agustin.backend_dialysis_record.dto.DoctorDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface DoctorService {
     List<DoctorDto> findAll();
 
-    DoctorDto findById(Long id);
+    DoctorDto findById(UUID id);
 
     DoctorDto create(DoctorDto doctorDto);
 
-    DoctorDto update(Long id, DoctorDto doctorDto);
+    DoctorDto update(UUID id, DoctorDto doctorDto);
 
-    void delete(Long id);
+    void delete(UUID id);
 
-    PatientDto addPatientToDoctor(Long doctorId, Long patientId);
+    PatientDto addPatientToDoctor(UUID doctorId, UUID patientId);
 
-    void removePatientFromDoctor(Long doctorId, Long patientId);
+    void removePatientFromDoctor(UUID doctorId, UUID patientId);
 
-    DoctorDto activate(Long doctorId);
+    DoctorDto activate(UUID doctorId);
 }
