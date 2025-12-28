@@ -14,7 +14,6 @@ public class PatientDto {
     private LocalDate dateOfBirth;
     private String address;
     private int number;
-    private String email;
     private String doctorName;
     private UUID doctorId;
 }

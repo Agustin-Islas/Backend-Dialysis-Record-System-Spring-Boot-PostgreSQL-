@@ -25,7 +25,6 @@ public class Doctor {
     private boolean active = true;
     private String name;
     private String surname;
-    private String email;
 
     @OneToMany(mappedBy = "doctor", fetch = FetchType.LAZY)
     private List<Patient> patients = new ArrayList<Patient>();

@@ -31,7 +31,7 @@ public class Patient {
     private LocalDate dateOfBirth;
     private String address;
     private int number;
-    private String email;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;
@@ -40,14 +40,13 @@ public class Patient {
 
     public Patient(String name, String surname, int dni,
                    LocalDate dateOfBirth, String address,
-                   int number, String email) {
+                   int number) {
         this.name = name;
         this.surname = surname;
         this.dni = dni;
         this.dateOfBirth = dateOfBirth;
         this.address = address;
         this.number = number;
-        this.email = email;
     }
 
     public void addSession(Session session) {
@@ -56,7 +55,14 @@ public class Patient {
     }
 
     @PrePersist
-    public void prePersist() {
-        if (id == null) id = UUID.randomUUID();
+    private void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+
+        // Debug: para detectar cuándo se persiste un Patient "sin querer"
+        System.out.println(">>> SE ESTA PERSISTIENDO UN PATIENT. Stacktrace:");
+        new Exception("Patient prePersist stack").printStackTrace();
     }
+
 }

@@ -30,7 +30,6 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patient.setDateOfBirth(patientDto.getDateOfBirth());
         patient.setAddress(patientDto.getAddress());
         patient.setNumber(patientDto.getNumber());
-        patient.setEmail(patientDto.getEmail());
         if (patientDto.getDoctorId() != null) {
             Doctor doctor = doctorRepository.getReferenceById(patientDto.getDoctorId());
             patient.setDoctor(doctor);
@@ -53,7 +52,6 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patientDto.setDateOfBirth(patient.getDateOfBirth());
         patientDto.setAddress(patient.getAddress());
         patientDto.setNumber(patient.getNumber());
-        patientDto.setEmail(patient.getEmail());
         if (patientDto.getDoctorId() != null) {
             patientDto.setDoctorName(patient.getDoctor().getName());
             patientDto.setDoctorId(patient.getDoctor().getId());
@@ -73,7 +71,6 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patient.setDateOfBirth(patientDto.getDateOfBirth());
         patient.setAddress(patientDto.getAddress());
         patient.setNumber(patientDto.getNumber());
-        patient.setEmail(patientDto.getEmail());
         if (patientDto.getDoctorId() != null) {
             Doctor doctor = doctorRepository.getReferenceById(patientDto.getDoctorId());
             patient.setDoctor(doctor);

@@ -26,7 +26,6 @@ public class DoctorMapper implements GenericMapper<Doctor, DoctorDto> {
         Doctor doctor = new Doctor();
         doctor.setName(doctorDto.getName());
         doctor.setSurname(doctorDto.getSurname());
-        doctor.setEmail(doctorDto.getEmail());
 
         return doctor;
     }
@@ -39,7 +38,6 @@ public class DoctorMapper implements GenericMapper<Doctor, DoctorDto> {
         doctorDto.setId(doctor.getId());
         doctorDto.setName(doctor.getName());
         doctorDto.setSurname(doctor.getSurname());
-        doctorDto.setEmail(doctor.getEmail());
 
         List<UUID> patientIds = new ArrayList<>();
         if (doctor.getPatients() != null && !doctor.getPatients().isEmpty()) {
@@ -59,7 +57,6 @@ public class DoctorMapper implements GenericMapper<Doctor, DoctorDto> {
         }
         doctor.setName(doctorDto.getName());
         doctor.setSurname(doctorDto.getSurname());
-        doctor.setEmail(doctorDto.getEmail());
 
         if (doctorDto.getPatientIds() != null) {
             List<Patient> patients = patientRepository.findAllById(doctorDto.getPatientIds());
