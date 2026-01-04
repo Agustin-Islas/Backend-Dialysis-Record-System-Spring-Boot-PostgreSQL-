@@ -27,7 +27,7 @@ public class Doctor {
     private String surname;
 
     @OneToMany(mappedBy = "doctor", fetch = FetchType.LAZY)
-    private List<Patient> patients = new ArrayList<Patient>();
+    private List<Patient> patients = new ArrayList<>();
 
     public void addPatient(Patient patient) {
         patients.add(patient);

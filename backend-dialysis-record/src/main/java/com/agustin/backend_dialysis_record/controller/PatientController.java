@@ -4,14 +4,17 @@ import com.agustin.backend_dialysis_record.dto.PatientDto;
 import com.agustin.backend_dialysis_record.dto.SessionDto;
 import com.agustin.backend_dialysis_record.service.PatientService;
 import com.agustin.backend_dialysis_record.service.SessionService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+@Validated
 @RestController
 @RequestMapping("/api/patients")
 public class PatientController {
@@ -34,7 +37,7 @@ public class PatientController {
 
 
     @PostMapping
-    public ResponseEntity<PatientDto> create(@RequestBody PatientDto patientDto) {
+    public ResponseEntity<PatientDto> create(@Valid @RequestBody PatientDto patientDto) {
         PatientDto patient = patientService.create(patientDto);
         return ResponseEntity.ok().body(patient);
     }
@@ -52,7 +55,7 @@ public class PatientController {
     }
 
     @PutMapping("/{patientId}")
-    public ResponseEntity<PatientDto> update(@PathVariable UUID patientId, @RequestBody PatientDto patientDto) {
+    public ResponseEntity<PatientDto> update(@PathVariable UUID patientId, @Valid @RequestBody PatientDto patientDto) {
         PatientDto patient = patientService.update(patientId, patientDto);
         return ResponseEntity.ok().body(patient);
     }

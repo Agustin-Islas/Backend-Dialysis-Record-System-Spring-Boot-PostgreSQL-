@@ -29,7 +29,12 @@ public class SecurityConfig {
                 // 3) Reglas de autorización por rutas
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos: login, register, etc.
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/auth/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // Endpoints que requieren permiso especifico
+                        .requestMatchers("/api/doctors/**").hasRole("DOCTOR")
+                        .requestMatchers("/api/patients/**").hasAnyRole("DOCTOR", "ADMIN")
+                        .requestMatchers("/api/sessions/**").hasAnyRole("DOCTOR", "PATIENT")
 
                         // Cualquier otra ruta requiere autenticación
                         .anyRequest().authenticated()

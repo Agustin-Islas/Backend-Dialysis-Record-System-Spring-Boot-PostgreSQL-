@@ -3,6 +3,7 @@ package com.agustin.backend_dialysis_record.controller;
 import com.agustin.backend_dialysis_record.dto.DoctorDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
 import com.agustin.backend_dialysis_record.service.DoctorService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,12 @@ public class DoctorController {
         return ResponseEntity.ok(savedPatient);
     }
 
+    @GetMapping("/{doctorId}/patients")
+    public ResponseEntity<List<PatientDto>> getPatientsByDoctor(@PathVariable UUID doctorId) {
+        List<PatientDto> patients = doctorService.getPatientsByDoctor(doctorId);
+        return ResponseEntity.ok().body(patients);
+    }
+
     @DeleteMapping("/{doctorId}/patients/{patientId}")
     public ResponseEntity<Void> removePatient(@PathVariable UUID doctorId, @PathVariable UUID patientId) {
         doctorService.removePatientFromDoctor(doctorId, patientId);
@@ -39,7 +46,7 @@ public class DoctorController {
     }
 
     @PostMapping
-    public ResponseEntity<DoctorDto> createDoctor(@RequestBody DoctorDto doctorDto) {
+    public ResponseEntity<DoctorDto> createDoctor(@Valid @RequestBody DoctorDto doctorDto) {
         DoctorDto doctor = doctorService.create(doctorDto);
         return ResponseEntity.ok().body(doctor);
     }
@@ -57,7 +64,7 @@ public class DoctorController {
     }
 
     @PutMapping("/{doctorId}")
-    public ResponseEntity<DoctorDto> updateDoctor(@PathVariable UUID doctorId, @RequestBody DoctorDto doctorDto) {
+    public ResponseEntity<DoctorDto> updateDoctor(@PathVariable UUID doctorId, @Valid @RequestBody DoctorDto doctorDto) {
         DoctorDto doctor = doctorService.update(doctorId, doctorDto);
         return ResponseEntity.ok().body(doctor);
     }

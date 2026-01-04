@@ -10,12 +10,14 @@ import com.agustin.backend_dialysis_record.repository.SessionRepository;
 import com.agustin.backend_dialysis_record.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class PatientServiceImpl implements PatientService {
     private final PatientRepository patientRepository;
     private final PatientMapper patientMapper;
@@ -28,12 +30,14 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PatientDto> findAll() {
         return patientRepository.findAll()
                 .stream().map(patientMapper::toDto).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PatientDto findById(UUID id) {
         return patientRepository.findById(id).map(patientMapper::toDto)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + id));
@@ -71,6 +75,7 @@ public class PatientServiceImpl implements PatientService {
         patientRepository.deleteById(id);
     }
 
+    @Override
     public PatientDto activate(UUID patientId) {
         Patient patient = patientRepository.findByIdIncludingInactive(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + patientId));

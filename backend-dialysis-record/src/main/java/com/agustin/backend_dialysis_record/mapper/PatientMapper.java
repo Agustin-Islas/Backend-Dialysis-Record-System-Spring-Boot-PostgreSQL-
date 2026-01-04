@@ -52,7 +52,7 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patientDto.setDateOfBirth(patient.getDateOfBirth());
         patientDto.setAddress(patient.getAddress());
         patientDto.setNumber(patient.getNumber());
-        if (patientDto.getDoctorId() != null) {
+        if (patient.getDoctor() != null) {
             patientDto.setDoctorName(patient.getDoctor().getName());
             patientDto.setDoctorId(patient.getDoctor().getId());
         } else {

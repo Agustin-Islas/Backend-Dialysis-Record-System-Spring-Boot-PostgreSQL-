@@ -24,12 +24,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/auth/")
+                || path.startsWith("/swagger-ui/")
+                || path.startsWith("/v3/api-docs/");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
 
-        // Si no viene token, no autenticamos; la seguridad se decide en SecurityConfig
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
             return;
@@ -40,21 +47,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtService.parseAndValidate(token);
 
-            String userId = claims.getSubject();     // UUID del UserAccount
-            String role = (String) claims.get("role");
+            String userId = claims.getSubject();
+            String role = claims.get("role", String.class);
 
             var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-
-            var authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, authorities);
+            var authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        } catch (Exception e) {
-            // Token inválido: limpiamos contexto y dejamos que Spring responda 401/403
-            SecurityContextHolder.clearContext();
-        }
+            chain.doFilter(request, response);
 
-        chain.doFilter(request, response);
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        }
     }
 }

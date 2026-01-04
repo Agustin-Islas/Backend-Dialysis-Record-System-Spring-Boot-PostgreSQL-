@@ -19,6 +19,8 @@ public interface DoctorService {
 
     PatientDto addPatientToDoctor(UUID doctorId, UUID patientId);
 
+    List<PatientDto> getPatientsByDoctor(UUID doctorId);
+
     void removePatientFromDoctor(UUID doctorId, UUID patientId);
 
     DoctorDto activate(UUID doctorId);

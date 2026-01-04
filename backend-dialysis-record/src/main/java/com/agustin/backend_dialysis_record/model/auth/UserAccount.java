@@ -36,14 +36,22 @@ public class UserAccount {
     @Column(nullable = false)
     private boolean enabled = true;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     private Doctor doctor;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     private Patient patient;
 
     @PrePersist
-    void prePersist() {
+    @PreUpdate
+    void validate() {
         if (id == null) id = UUID.randomUUID();
+
+        boolean hasDoctor = doctor != null;
+        boolean hasPatient = patient != null;
+
+        if (hasDoctor == hasPatient) { // inválido
+            throw new IllegalStateException("UserAccount must be linked to exactly one: Doctor OR Patient");
+        }
     }
 }

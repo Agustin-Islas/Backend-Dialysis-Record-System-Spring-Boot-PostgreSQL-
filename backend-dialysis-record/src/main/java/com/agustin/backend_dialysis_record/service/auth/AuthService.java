@@ -2,23 +2,36 @@ package com.agustin.backend_dialysis_record.service.auth;
 
 import com.agustin.backend_dialysis_record.dto.auth.AuthResponse;
 import com.agustin.backend_dialysis_record.dto.auth.LoginRequest;
+import com.agustin.backend_dialysis_record.dto.auth.RegisterDoctorRequest;
+import com.agustin.backend_dialysis_record.dto.auth.RegisterPatientRequest;
+import com.agustin.backend_dialysis_record.model.Doctor;
+import com.agustin.backend_dialysis_record.model.Patient;
 import com.agustin.backend_dialysis_record.model.auth.UserAccount;
+import com.agustin.backend_dialysis_record.model.auth.UserRole;
+import com.agustin.backend_dialysis_record.repository.DoctorRepository;
+import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
 import com.agustin.backend_dialysis_record.security.jwt.JwtService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
 
     private final UserAccountRepository userAccountRepository;
+    private final PatientRepository patientRepo;
+    private final DoctorRepository doctorRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthService(UserAccountRepository userAccountRepository,
+    public AuthService(UserAccountRepository userAccountRepository, PatientRepository patientRepo, DoctorRepository doctorRepo,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService) {
         this.userAccountRepository = userAccountRepository;
+        this.patientRepo = patientRepo;
+        this.doctorRepo = doctorRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
@@ -37,6 +50,52 @@ public class AuthService {
         }
 
         String token = jwtService.generateAccessToken(acc);
+        return new AuthResponse(token);
+    }
+
+    public AuthResponse registerDoctor(RegisterDoctorRequest req) {
+        if (userAccountRepository.existsByEmail(req.email())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+        }
+
+        Doctor doctor = new Doctor();
+        doctor.setName(req.name());
+        doctor.setSurname(req.surname());
+        doctor = doctorRepo.save(doctor);
+
+        UserAccount ua = new UserAccount();
+        ua.setEmail(req.email());
+        ua.setPasswordHash(passwordEncoder.encode(req.password()));
+        ua.setRole(UserRole.DOCTOR);
+        ua.setDoctor(doctor);
+        userAccountRepository.save(ua);
+
+        String token = jwtService.generateAccessToken(ua); // incluye role + id
+        return new AuthResponse(token);
+    }
+
+    public AuthResponse registerPatient(RegisterPatientRequest req) {
+        if (userAccountRepository.existsByEmail(req.email())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+        }
+
+        Patient patient = new Patient();
+        patient.setName(req.name());
+        patient.setSurname(req.surname());
+        patient.setDni(req.dni());
+        patient.setDateOfBirth(req.dateOfBirth());
+        patient.setAddress(req.address());
+        patient.setNumber(req.number());
+        patient = patientRepo.save(patient);
+
+        UserAccount ua = new UserAccount();
+        ua.setEmail(req.email());
+        ua.setPasswordHash(passwordEncoder.encode(req.password()));
+        ua.setRole(UserRole.PATIENT);
+        ua.setPatient(patient);
+        userAccountRepository.save(ua);
+
+        String token = jwtService.generateAccessToken(ua); // incluye role + id
         return new AuthResponse(token);
     }
 }

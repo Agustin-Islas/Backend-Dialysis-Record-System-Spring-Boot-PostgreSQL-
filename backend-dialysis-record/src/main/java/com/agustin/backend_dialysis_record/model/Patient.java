@@ -35,8 +35,9 @@ public class Patient {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;
+
     @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Session> sessions = new ArrayList<Session>();
+    private List<Session> sessions = new ArrayList<>();
 
     public Patient(String name, String surname, int dni,
                    LocalDate dateOfBirth, String address,
@@ -56,13 +57,7 @@ public class Patient {
 
     @PrePersist
     private void prePersist() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
-
-        // Debug: para detectar cuándo se persiste un Patient "sin querer"
-        System.out.println(">>> SE ESTA PERSISTIENDO UN PATIENT. Stacktrace:");
-        new Exception("Patient prePersist stack").printStackTrace();
+        if (id == null) id = UUID.randomUUID();
     }
 
 }

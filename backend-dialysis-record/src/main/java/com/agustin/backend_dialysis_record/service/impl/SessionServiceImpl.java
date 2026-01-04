@@ -7,12 +7,14 @@ import com.agustin.backend_dialysis_record.repository.SessionRepository;
 import com.agustin.backend_dialysis_record.service.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class SessionServiceImpl implements SessionService {
     private final SessionRepository sessionRepository;
     private final SessionMapper sessionMapper;
@@ -24,12 +26,14 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SessionDto> findAll() {
         return sessionRepository.findAll()
                 .stream().map(sessionMapper::toDto).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SessionDto findById(UUID id) {
         return sessionRepository.findById(id)
                 .map(sessionMapper::toDto)
@@ -63,12 +67,14 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SessionDto> findSessionsByPatientId(UUID patientId) { //TODO: CHECK NULLS
         return sessionRepository.findByPatientIdOrderByDateDesc(patientId)
                 .stream().map(sessionMapper::toDto).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SessionDto> findSessionsByPatientIdAndDateRange(UUID patientId, LocalDate startDate, LocalDate endDate) {
         List<SessionDto> sessions = findSessionsByPatientId(patientId);
         return sessions.stream().filter(
@@ -76,6 +82,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SessionDto> findSessionsByDay(UUID patientId, LocalDate day) { //TODO: CHECK NULLS
         return findSessionsByPatientId(patientId)
                 .stream().filter(session -> session.getDate().equals(day)).toList();

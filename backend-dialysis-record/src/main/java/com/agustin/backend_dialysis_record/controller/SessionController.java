@@ -2,6 +2,7 @@ package com.agustin.backend_dialysis_record.controller;
 
 import com.agustin.backend_dialysis_record.dto.SessionDto;
 import com.agustin.backend_dialysis_record.service.SessionService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class SessionController {
     //set inactive
 
     @PostMapping
-    public ResponseEntity<SessionDto> create(@RequestBody SessionDto sessionDto) {
+    public ResponseEntity<SessionDto> create(@Valid @RequestBody SessionDto sessionDto) {
         SessionDto session = sessionService.create(sessionDto);
         return ResponseEntity.ok().body(session);
     }
@@ -40,7 +41,7 @@ public class SessionController {
     }
 
     @PutMapping("/{sessionId}")
-    public ResponseEntity<SessionDto> update(@PathVariable UUID sessionId, @RequestBody SessionDto sessionDto) {
+    public ResponseEntity<SessionDto> update(@PathVariable UUID sessionId, @Valid @RequestBody SessionDto sessionDto) {
         SessionDto session = sessionService.update(sessionId, sessionDto);
         return ResponseEntity.ok().body(session);
     }
