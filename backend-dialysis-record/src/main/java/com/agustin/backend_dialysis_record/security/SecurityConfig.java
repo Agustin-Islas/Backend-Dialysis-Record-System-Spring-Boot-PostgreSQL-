@@ -36,6 +36,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/patients/**").hasAnyRole("DOCTOR", "ADMIN")
                         .requestMatchers("/api/sessions/**").hasAnyRole("DOCTOR", "PATIENT")
 
+                        .requestMatchers("/api/auth/logout").permitAll()
+                        .requestMatchers("/api/auth/logout/all").authenticated()
+
+
                         // Cualquier otra ruta requiere autenticación
                         .anyRequest().authenticated()
                 )

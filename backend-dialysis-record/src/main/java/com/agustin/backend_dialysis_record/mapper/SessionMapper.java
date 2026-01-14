@@ -17,6 +17,9 @@ public class SessionMapper implements GenericMapper<Session, SessionDto> {
     public Session toEntity(SessionDto sessionDto) {
         if (sessionDto == null) { return null; }
 
+        if (sessionDto.getPatientId() == null)
+                throw new RuntimeException("Session has no patient to assign");
+
         Session session = new Session();
         session.setDate(sessionDto.getDate());
         session.setHour(sessionDto.getHour());
@@ -26,11 +29,9 @@ public class SessionMapper implements GenericMapper<Session, SessionDto> {
         session.setDrainage(sessionDto.getDrainage());
         session.setPartial(sessionDto.getPartial());
         session.setObservations(sessionDto.getObservations());
-        if (sessionDto.getPatientId() != null) {
-            Patient patient = patientRepository.getReferenceById(sessionDto.getPatientId());
-            patient.addSession(session);
-            session.setPatient(patient);
-        }
+        Patient patient = patientRepository.getReferenceById(sessionDto.getPatientId());
+        patient.addSession(session);
+        session.setPatient(patient);
         return session;
     }
 

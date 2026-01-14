@@ -13,4 +13,8 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
     @Query(value = "SELECT * FROM patient WHERE id = :id", nativeQuery = true)
     Optional<Patient> findByIdIncludingInactive(@Param("id") UUID id);
 
+    // valida si un patient pertenece a un doctor
+    boolean existsByIdAndDoctor_Id(UUID patientId, UUID doctorId);
+
+
 }

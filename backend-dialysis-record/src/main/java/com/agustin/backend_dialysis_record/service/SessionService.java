@@ -1,6 +1,7 @@
 package com.agustin.backend_dialysis_record.service;
 
 import com.agustin.backend_dialysis_record.dto.SessionDto;
+import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,4 +23,6 @@ public interface SessionService {
     List<SessionDto> findSessionsByPatientIdAndDateRange(UUID patientId, LocalDate startDate, LocalDate endDate);
 
     List<SessionDto> findSessionsByDay(UUID patientId, LocalDate day);
+
+    SessionDto createForPatient(UUID patientId, @Valid SessionDto sessionDto);
 }

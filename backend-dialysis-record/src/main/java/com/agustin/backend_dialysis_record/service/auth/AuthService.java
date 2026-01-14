@@ -12,6 +12,7 @@ import com.agustin.backend_dialysis_record.repository.DoctorRepository;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
 import com.agustin.backend_dialysis_record.security.jwt.JwtService;
+import com.agustin.backend_dialysis_record.security.jwt.RefreshTokenService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,15 +26,18 @@ public class AuthService {
     private final DoctorRepository doctorRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
+
 
     public AuthService(UserAccountRepository userAccountRepository, PatientRepository patientRepo, DoctorRepository doctorRepo,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService, RefreshTokenService refreshTokenService) {
         this.userAccountRepository = userAccountRepository;
         this.patientRepo = patientRepo;
         this.doctorRepo = doctorRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public AuthResponse login(LoginRequest req) {
@@ -50,7 +54,16 @@ public class AuthService {
         }
 
         String token = jwtService.generateAccessToken(acc);
-        return new AuthResponse(token);
+        var issuedRefresh = refreshTokenService.issue(acc);
+
+        return new AuthResponse(token, issuedRefresh.plainToken());
+    }
+
+    public AuthResponse refresh(String refreshTokenPlain) {
+        var rotated = refreshTokenService.rotate(refreshTokenPlain);
+
+        String access = jwtService.generateAccessToken(rotated.entity().getUserAccount());
+        return new AuthResponse(access, rotated.plainToken());
     }
 
     public AuthResponse registerDoctor(RegisterDoctorRequest req) {
@@ -71,7 +84,9 @@ public class AuthService {
         userAccountRepository.save(ua);
 
         String token = jwtService.generateAccessToken(ua); // incluye role + id
-        return new AuthResponse(token);
+        String refresh = refreshTokenService.issue(ua).plainToken();
+
+        return new AuthResponse(token, refresh);
     }
 
     public AuthResponse registerPatient(RegisterPatientRequest req) {
@@ -96,6 +111,17 @@ public class AuthService {
         userAccountRepository.save(ua);
 
         String token = jwtService.generateAccessToken(ua); // incluye role + id
-        return new AuthResponse(token);
+        String refresh = refreshTokenService.issue(ua).plainToken();
+
+        return new AuthResponse(token, refresh);
     }
+
+    public void logout(String refreshToken) {
+        refreshTokenService.revoke(refreshToken);
+    }
+
+    public void logoutAll(UserAccount userAccount) {
+        refreshTokenService.revokeAll(userAccount);
+    }
+
 }

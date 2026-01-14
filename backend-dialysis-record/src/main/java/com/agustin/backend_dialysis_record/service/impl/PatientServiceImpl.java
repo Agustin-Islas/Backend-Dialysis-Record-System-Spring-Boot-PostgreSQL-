@@ -1,5 +1,6 @@
 package com.agustin.backend_dialysis_record.service.impl;
 
+import com.agustin.backend_dialysis_record.dto.DoctorDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
 import com.agustin.backend_dialysis_record.mapper.PatientMapper;
 import com.agustin.backend_dialysis_record.model.Doctor;
@@ -7,6 +8,7 @@ import com.agustin.backend_dialysis_record.model.Patient;
 import com.agustin.backend_dialysis_record.model.Session;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.SessionRepository;
+import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
 import com.agustin.backend_dialysis_record.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,11 +22,13 @@ import java.util.UUID;
 @Transactional
 public class PatientServiceImpl implements PatientService {
     private final PatientRepository patientRepository;
+    private final UserAccountRepository userAccountRepository;
     private final PatientMapper patientMapper;
     private final SessionServiceImpl sessionService;
     @Autowired
-    public PatientServiceImpl(PatientRepository patientRepository, PatientMapper patientMapper, SessionServiceImpl sessionService) {
+    public PatientServiceImpl(PatientRepository patientRepository, UserAccountRepository userAccountRepository, PatientMapper patientMapper, SessionServiceImpl sessionService) {
         this.patientRepository = patientRepository;
+        this.userAccountRepository = userAccountRepository;
         this.patientMapper = patientMapper;
         this.sessionService = sessionService;
     }
@@ -81,5 +85,13 @@ public class PatientServiceImpl implements PatientService {
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + patientId));
         patient.setActive(true);
         return patientMapper.toDto(patientRepository.save(patient));
+    }
+
+    @Override
+    public PatientDto getMyPatient(UUID userAccountId) {
+        UUID patientId = userAccountRepository.findPatientIdByUserAccountId(userAccountId)
+                .orElseThrow(() -> new RuntimeException("Patient not linked to this account"));
+
+        return findById(patientId);
     }
 }

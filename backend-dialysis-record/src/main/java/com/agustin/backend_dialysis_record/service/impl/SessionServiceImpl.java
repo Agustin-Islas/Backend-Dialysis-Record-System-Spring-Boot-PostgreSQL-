@@ -2,7 +2,9 @@ package com.agustin.backend_dialysis_record.service.impl;
 
 import com.agustin.backend_dialysis_record.dto.SessionDto;
 import com.agustin.backend_dialysis_record.mapper.SessionMapper;
+import com.agustin.backend_dialysis_record.model.Patient;
 import com.agustin.backend_dialysis_record.model.Session;
+import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.SessionRepository;
 import com.agustin.backend_dialysis_record.service.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +19,13 @@ import java.util.UUID;
 @Transactional
 public class SessionServiceImpl implements SessionService {
     private final SessionRepository sessionRepository;
+    private final PatientRepository patientRepository;
     private final SessionMapper sessionMapper;
 
     @Autowired
-    public SessionServiceImpl(SessionRepository sessionRepository, SessionMapper sessionMapper) {
+    public SessionServiceImpl(SessionRepository sessionRepository, PatientRepository patientRepository, SessionMapper sessionMapper) {
         this.sessionRepository = sessionRepository;
+        this.patientRepository = patientRepository;
         this.sessionMapper = sessionMapper;
     }
 
@@ -86,5 +90,21 @@ public class SessionServiceImpl implements SessionService {
     public List<SessionDto> findSessionsByDay(UUID patientId, LocalDate day) { //TODO: CHECK NULLS
         return findSessionsByPatientId(patientId)
                 .stream().filter(session -> session.getDate().equals(day)).toList();
+    }
+
+    @Override
+    public SessionDto createForPatient(UUID patientId, SessionDto sessionDto) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Patient not found: " + patientId));
+
+        Session session = sessionMapper.toEntity(sessionDto);
+
+        // 3) forzar ownership: paciente desde path
+        session.setPatient(patient);
+
+        if (session.getDate() == null) session.setDate(LocalDate.now());
+
+        Session saved = sessionRepository.save(session);
+        return sessionMapper.toDto(saved);
     }
 }

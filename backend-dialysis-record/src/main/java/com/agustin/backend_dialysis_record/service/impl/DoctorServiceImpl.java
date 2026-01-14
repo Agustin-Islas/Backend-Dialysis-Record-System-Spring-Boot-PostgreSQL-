@@ -8,7 +8,9 @@ import com.agustin.backend_dialysis_record.model.Doctor;
 import com.agustin.backend_dialysis_record.model.Patient;
 import com.agustin.backend_dialysis_record.repository.DoctorRepository;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
+import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
 import com.agustin.backend_dialysis_record.service.DoctorService;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,15 +23,17 @@ import java.util.UUID;
 public class DoctorServiceImpl implements DoctorService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
+    private final UserAccountRepository userAccountRepository;
     private final DoctorMapper doctorMapper;
     private final PatientMapper patientMapper;
     private final PatientServiceImpl patientService;
 
     @Autowired
-    public DoctorServiceImpl(DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorMapper doctorMapper,
+    public DoctorServiceImpl(DoctorRepository doctorRepository, PatientRepository patientRepository, UserAccountRepository userAccountRepository, DoctorMapper doctorMapper,
                              PatientMapper patientMapper, PatientServiceImpl patientService) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
+        this.userAccountRepository = userAccountRepository;
         this.doctorMapper = doctorMapper;
         this.patientService = patientService;
         this.patientMapper = patientMapper;
@@ -118,4 +122,37 @@ public class DoctorServiceImpl implements DoctorService {
         doctor.setActive(true);
         return doctorMapper.toDto(doctorRepository.save(doctor));
     }
+
+    @Override
+    public DoctorDto getMyDoctor(UUID userAccountId) {
+        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId)
+                .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
+
+        return findById(doctorId);
+    }
+
+    @Override
+    public List<PatientDto> getMyPatients(UUID userAccountId) {
+        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId)
+                .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
+
+        return getPatientsByDoctor(doctorId);
+    }
+
+    @Override
+    public PatientDto addPatientToMyDoctor(UUID userAccountId, UUID patientId) {
+        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId)
+                .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
+
+        return addPatientToDoctor(doctorId, patientId);
+    }
+
+    @Override
+    public void removePatientFromMyDoctor(UUID userAccountId, UUID patientId) {
+        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId)
+                .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
+
+        removePatientFromDoctor(doctorId, patientId);
+    }
+
 }
