@@ -15,6 +15,8 @@ El sistema modela tres entidades principales:
 Incluye operaciones CRUD completas, permite asignar pacientes a doctores y registra sesiones clínicas ordenadas por fecha.  
 La API expone endpoints REST consistentes y organizados bajo una arquitectura clara orientada a la mantenibilidad y extensibilidad.
 
+El acceso a los recursos se encuentra protegido mediante autenticación y autorización basadas en JWT,
+garantizando que solo usuarios autenticados puedan interactuar con la API según su rol.
 
 ## **Arquitectura y metodología**
 
@@ -34,6 +36,13 @@ Incluye validaciones, operaciones sobre entidades y uso de **DTOs y mappers**.
 Exposición de endpoints HTTP mediante `RestController` y `ResponseEntity`.  
 Define la interfaz pública de la API.
 
+### **Seguridad***
+Implementación de Spring Security con JWT, incluyendo:
+  Autenticación stateless.
+  Filtros personalizados para validación del token.
+  Configuración de reglas de acceso por endpoint.
+  Integración con el flujo de login y emisión de tokens.
+
 ### **DTOs y Mappers**
 Capa destinada a desacoplar el modelo de persistencia de la API, facilitando claridad, seguridad y futuras modificaciones.
 
@@ -41,7 +50,8 @@ Capa destinada a desacoplar el modelo de persistencia de la API, facilitando cla
 ## **Tecnologías utilizadas**
 
 - **Java 24**
-- **Spring Boot** (Web, JPA, Validation)
+- **Spring Boot** (Web, JPA, Validation, Security)
+- ***Spring Security + JWT***
 - **Hibernate**
 - **Spring Data JPA**
 - **Lombok**
@@ -51,13 +61,15 @@ Capa destinada a desacoplar el modelo de persistencia de la API, facilitando cla
 
 ## **Funcionalidades principales**
 
-- CRUD completo para **Doctor**, **Patient** y **Session**
-- Registro de sesiones de diálisis ordenadas por fecha
-- Asignación y desasignación de pacientes a un doctor
-- Uso de **DTOs y mappers**
-- Soft delete opcional mediante anotaciones de Hibernate
-- Validaciones básicas
-- Arquitectura modular orientada a la escalabilidad
+- CRUD completo para Doctor, Patient y Session.
+- Registro de sesiones de diálisis ordenadas por fecha.
+- Asignación y desasignación de pacientes a un doctor.
+- Autenticación y autorización mediante JWT.
+- Protección de endpoints con Spring Security.
+- Uso de DTOs y mappers.
+- Soft delete opcional mediante anotaciones de Hibernate.
+- Validaciones básicas.
+- Arquitectura modular orientada a la escalabilidad.
 
 
 ## **Estado del proyecto**
@@ -66,8 +78,8 @@ Versión base funcional que puede actuar como backend independiente o como API p
 
 Próximas mejoras previstas:
 
-- Autenticación y autorización (JWT)
-- Gestión de roles (doctor/paciente)
+- Autenticación y autorización (JWT) ✔️
+- Gestión de roles (doctor/paciente) ✔️
 - Validaciones avanzadas
 - Paginación y filtrado
 - Manejo global de excepciones
