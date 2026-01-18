@@ -41,16 +41,17 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest req) {
-        UserAccount acc = userAccountRepository.findByEmailIgnoreCase(req.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        String email = req.getEmail().trim().toLowerCase();
+        UserAccount acc = userAccountRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
         if (!acc.isEnabled()) {
-            throw new RuntimeException("Account disabled");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account disabled");
         }
 
         boolean ok = passwordEncoder.matches(req.getPassword(), acc.getPasswordHash());
         if (!ok) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
         String token = jwtService.generateAccessToken(acc);
@@ -77,7 +78,7 @@ public class AuthService {
         doctor = doctorRepo.save(doctor);
 
         UserAccount ua = new UserAccount();
-        ua.setEmail(req.email());
+        ua.setEmail(req.email().trim().toLowerCase());
         ua.setPasswordHash(passwordEncoder.encode(req.password()));
         ua.setRole(UserRole.DOCTOR);
         ua.setDoctor(doctor);

@@ -30,7 +30,7 @@ public class Patient {
     private int dni;
     private LocalDate dateOfBirth;
     private String address;
-    private int number;
+    private Long number;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id")
@@ -41,7 +41,7 @@ public class Patient {
 
     public Patient(String name, String surname, int dni,
                    LocalDate dateOfBirth, String address,
-                   int number) {
+                   Long number) {
         this.name = name;
         this.surname = surname;
         this.dni = dni;

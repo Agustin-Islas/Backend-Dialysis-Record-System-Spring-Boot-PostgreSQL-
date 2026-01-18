@@ -34,8 +34,7 @@ public class PatientDto {
 
     @NotNull
     @Min(1)
-    @Max(99999)
-    private Integer number;
+    private Long number;
 
     private String doctorName;
     private UUID doctorId;

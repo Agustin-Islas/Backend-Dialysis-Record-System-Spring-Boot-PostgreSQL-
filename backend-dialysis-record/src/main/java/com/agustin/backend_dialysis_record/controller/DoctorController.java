@@ -30,7 +30,7 @@ public class DoctorController {
 
     @PreAuthorize("hasRole('DOCTOR')")
     @GetMapping("/me")
-    public ResponseEntity<DoctorDto> getMe(Authentication auth) {
+    public ResponseEntity<DoctorDto> getMe(Authentication auth) { //TODO: crear DoctorMeDto que extiende DoctorDto
         UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
         return ResponseEntity.ok(doctorService.getMyDoctor(userAccountId));
     }

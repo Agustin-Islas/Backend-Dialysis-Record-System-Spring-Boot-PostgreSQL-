@@ -2,10 +2,12 @@ package com.agustin.backend_dialysis_record.service.impl;
 
 import com.agustin.backend_dialysis_record.dto.DoctorDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
+import com.agustin.backend_dialysis_record.dto.PatientMeDto;
 import com.agustin.backend_dialysis_record.mapper.PatientMapper;
 import com.agustin.backend_dialysis_record.model.Doctor;
 import com.agustin.backend_dialysis_record.model.Patient;
 import com.agustin.backend_dialysis_record.model.Session;
+import com.agustin.backend_dialysis_record.model.auth.UserAccount;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.SessionRepository;
 import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
@@ -88,10 +90,33 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public PatientDto getMyPatient(UUID userAccountId) {
+    public PatientMeDto getMyPatient(UUID userAccountId) {
+        UserAccount ua = userAccountRepository.findById(userAccountId)
+                .orElseThrow(() -> new RuntimeException("Account non exist"));;
+
         UUID patientId = userAccountRepository.findPatientIdByUserAccountId(userAccountId)
                 .orElseThrow(() -> new RuntimeException("Patient not linked to this account"));
 
-        return findById(patientId);
+
+        PatientDto base = findById(patientId); // <- devuelve PatientDto
+
+        PatientMeDto dto = new PatientMeDto();
+
+        //by patient
+        dto.setId(base.getId());
+        dto.setName(base.getName());
+        dto.setSurname(base.getSurname());
+        dto.setDni(base.getDni());
+        dto.setDateOfBirth(base.getDateOfBirth());
+        dto.setAddress(base.getAddress());
+        dto.setNumber(base.getNumber());
+        dto.setDoctorId(base.getDoctorId());
+        dto.setDoctorName(base.getDoctorName());
+
+        //by user
+        dto.setEmail(ua.getEmail());
+        dto.setRole(ua.getRole());
+
+        return dto;
     }
 }

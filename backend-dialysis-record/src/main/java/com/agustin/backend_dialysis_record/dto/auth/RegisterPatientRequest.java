@@ -1,9 +1,7 @@
 package com.agustin.backend_dialysis_record.dto.auth;
 
 import java.time.LocalDate;
-
 import jakarta.validation.constraints.*;
-import java.time.LocalDate;
 
 public record RegisterPatientRequest(
         @NotBlank
@@ -37,6 +35,5 @@ public record RegisterPatientRequest(
         String address,
 
         @Min(1)
-        @Max(99999)
-        int number
+        Long number
 ) {}

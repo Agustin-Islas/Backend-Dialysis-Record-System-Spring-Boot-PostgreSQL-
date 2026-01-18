@@ -2,6 +2,7 @@ package com.agustin.backend_dialysis_record.controller;
 
 import com.agustin.backend_dialysis_record.dto.DoctorDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
+import com.agustin.backend_dialysis_record.dto.PatientMeDto;
 import com.agustin.backend_dialysis_record.dto.SessionDto;
 import com.agustin.backend_dialysis_record.service.PatientService;
 import com.agustin.backend_dialysis_record.service.SessionService;
@@ -43,7 +44,7 @@ public class PatientController {
 
     @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/me")
-    public ResponseEntity<PatientDto> getMe(Authentication auth) {
+    public ResponseEntity<PatientMeDto> getMe(Authentication auth) {
         UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
         return ResponseEntity.ok(patientService.getMyPatient(userAccountId));
     }

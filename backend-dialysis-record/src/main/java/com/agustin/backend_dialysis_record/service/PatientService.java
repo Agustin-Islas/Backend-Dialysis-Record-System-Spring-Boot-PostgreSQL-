@@ -1,6 +1,7 @@
 package com.agustin.backend_dialysis_record.service;
 
 import com.agustin.backend_dialysis_record.dto.PatientDto;
+import com.agustin.backend_dialysis_record.dto.PatientMeDto;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -19,5 +20,6 @@ public interface PatientService {
 
     PatientDto activate(UUID patientId);
 
-    @Nullable PatientDto getMyPatient(UUID userAccountId);
+    @Nullable
+    PatientMeDto getMyPatient(UUID userAccountId);
 }
