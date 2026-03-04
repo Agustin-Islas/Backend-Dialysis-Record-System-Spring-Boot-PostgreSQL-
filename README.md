@@ -55,7 +55,7 @@ Capa destinada a desacoplar el modelo de persistencia de la API, facilitando cla
 - **Hibernate**
 - **Spring Data JPA**
 - **Lombok**
-- **Mappers** (manuales o MapStruct)
+- **Mappers**
 - **PostgreSQL**
 
 
