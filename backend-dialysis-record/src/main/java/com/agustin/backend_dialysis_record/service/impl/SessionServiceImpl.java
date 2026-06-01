@@ -81,8 +81,11 @@ public class SessionServiceImpl implements SessionService {
     @Transactional(readOnly = true)
     public List<SessionDto> findSessionsByPatientIdAndDateRange(UUID patientId, LocalDate startDate, LocalDate endDate) {
         List<SessionDto> sessions = findSessionsByPatientId(patientId);
-        return sessions.stream().filter(
-                sessionDto -> sessionDto.getDate().isAfter(startDate) && sessionDto.getDate().equals(endDate)).toList();
+        return sessions.stream()
+                .filter(sessionDto ->
+                        !sessionDto.getDate().isBefore(startDate) &&
+                        !sessionDto.getDate().isAfter(endDate))
+                .toList();
     }
 
     @Override

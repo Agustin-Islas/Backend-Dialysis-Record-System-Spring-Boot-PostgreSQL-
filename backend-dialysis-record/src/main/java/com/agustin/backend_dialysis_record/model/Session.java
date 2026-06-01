@@ -38,14 +38,13 @@ public class Session {
     private Patient patient;
 
     public Session(LocalDate date, LocalTime hour, int bag, float concentration,
-                   int infusion, int drainage, int partial, String observations) {
+                   int infusion, int drainage, String observations) {
         this.date = date;
         this.hour = hour;
         this.bag = bag;
         this.concentration = concentration;
         this.infusion = infusion;
         this.drainage = drainage;
-        this.partial = partial;
         this.observations = observations;
     }
 

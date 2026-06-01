@@ -34,8 +34,6 @@ public class SessionDto {
     @Min(value = 0, message = "drainage must be >= 0 (ml)")
     private Integer drainage;
 
-    // ml, puede ser negativo. Le pongo piso para evitar valores ridículos.
-    @Min(value = -1000000, message = "partial is too small")
     private Integer partial;
 
     @Size(max = 500, message = "observations max length is 500")
