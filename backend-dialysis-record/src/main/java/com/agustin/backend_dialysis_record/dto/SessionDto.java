@@ -19,18 +19,22 @@ public class SessionDto {
     @NotNull(message = "hour is required")
     private LocalTime hour;
 
+    @NotNull(message = "bag is required")
     @Min(value = 0, message = "bag must be >= 0 ")
     private Integer bag;
 
     // libre, pero no negativa
+    @NotNull(message = "concentration is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "concentration must be >= 0")
     private Float concentration;
 
     // ml, sin máximo
+    @NotNull(message = "infusion is required")
     @Min(value = 0, message = "infusion must be >= 0 (ml)")
     private Integer infusion;
 
     // ml, sin máximo
+    @NotNull(message = "drainage is required")
     @Min(value = 0, message = "drainage must be >= 0 (ml)")
     private Integer drainage;
 

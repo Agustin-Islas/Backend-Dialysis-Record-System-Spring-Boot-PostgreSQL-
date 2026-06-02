@@ -32,6 +32,11 @@ public class Patient {
     private String address;
     private Long number;
 
+    @ElementCollection
+    @CollectionTable(name = "patient_custom_concentration", joinColumns = @JoinColumn(name = "patient_id"))
+    @Column(name = "concentration", nullable = false)
+    private List<Float> customConcentrations = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;

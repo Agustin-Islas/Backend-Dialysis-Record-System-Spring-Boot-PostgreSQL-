@@ -1,9 +1,9 @@
 package com.agustin.backend_dialysis_record.controller;
 
-import com.agustin.backend_dialysis_record.dto.DoctorDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
 import com.agustin.backend_dialysis_record.dto.PatientMeDto;
 import com.agustin.backend_dialysis_record.dto.SessionDto;
+import com.agustin.backend_dialysis_record.dto.SessionSummaryDto;
 import com.agustin.backend_dialysis_record.service.PatientService;
 import com.agustin.backend_dialysis_record.service.SessionService;
 import jakarta.validation.Valid;
@@ -120,5 +120,20 @@ public class PatientController {
     public ResponseEntity<List<SessionDto>> getSessionsByDay(@PathVariable UUID patientId,
                                                              @PathVariable LocalDate day) {
         return ResponseEntity.ok(sessionService.findSessionsByDay(patientId, day));
+    }
+
+    @PreAuthorize("@authz.canAccessPatient(#patientId)")
+    @GetMapping("/{patientId}/sessions/summary/day/{day}")
+    public ResponseEntity<SessionSummaryDto> getSessionSummaryByDay(@PathVariable UUID patientId,
+                                                                    @PathVariable LocalDate day) {
+        return ResponseEntity.ok(sessionService.summarizeSessionsByDay(patientId, day));
+    }
+
+    @PreAuthorize("@authz.canAccessPatient(#patientId)")
+    @GetMapping("/{patientId}/sessions/summary/month")
+    public ResponseEntity<SessionSummaryDto> getSessionSummaryByMonth(@PathVariable UUID patientId,
+                                                                      @RequestParam int year,
+                                                                      @RequestParam int month) {
+        return ResponseEntity.ok(sessionService.summarizeSessionsByMonth(patientId, year, month));
     }
 }

@@ -7,6 +7,8 @@ import com.agustin.backend_dialysis_record.repository.DoctorRepository;
 import com.agustin.backend_dialysis_record.repository.SessionRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -30,6 +32,7 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patient.setDateOfBirth(patientDto.getDateOfBirth());
         patient.setAddress(patientDto.getAddress());
         patient.setNumber(patientDto.getNumber());
+        patient.setCustomConcentrations(copyCustomConcentrations(patientDto));
         if (patientDto.getDoctorId() != null) {
             Doctor doctor = doctorRepository.getReferenceById(patientDto.getDoctorId());
             patient.setDoctor(doctor);
@@ -52,6 +55,7 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patientDto.setDateOfBirth(patient.getDateOfBirth());
         patientDto.setAddress(patient.getAddress());
         patientDto.setNumber(patient.getNumber());
+        patientDto.setCustomConcentrations(new ArrayList<>(patient.getCustomConcentrations()));
         if (patient.getDoctor() != null) {
             patientDto.setDoctorName(patient.getDoctor().getName());
             patientDto.setDoctorId(patient.getDoctor().getId());
@@ -71,11 +75,16 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patient.setDateOfBirth(patientDto.getDateOfBirth());
         patient.setAddress(patientDto.getAddress());
         patient.setNumber(patientDto.getNumber());
+        patient.setCustomConcentrations(copyCustomConcentrations(patientDto));
         if (patientDto.getDoctorId() != null) {
             Doctor doctor = doctorRepository.getReferenceById(patientDto.getDoctorId());
             patient.setDoctor(doctor);
         }
         //List<Session> sessions = sessionRepository.findByPatientIdOrderByDateDesc(patient.getId());
         //patient.setSessions(sessions);
+    }
+
+    private ArrayList<Float> copyCustomConcentrations(PatientDto patientDto) {
+        return new ArrayList<>(patientDto.getCustomConcentrations() == null ? Collections.emptyList() : patientDto.getCustomConcentrations());
     }
 }

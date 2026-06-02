@@ -1,6 +1,7 @@
 package com.agustin.backend_dialysis_record.service.impl;
 
 import com.agustin.backend_dialysis_record.dto.SessionDto;
+import com.agustin.backend_dialysis_record.dto.SessionSummaryDto;
 import com.agustin.backend_dialysis_record.mapper.SessionMapper;
 import com.agustin.backend_dialysis_record.model.Patient;
 import com.agustin.backend_dialysis_record.model.Session;
@@ -13,11 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @Transactional
 public class SessionServiceImpl implements SessionService {
+    private static final Set<Float> FIXED_CONCENTRATIONS = Set.of(1.5f, 2.4f, 3.8f);
+
     private final SessionRepository sessionRepository;
     private final PatientRepository patientRepository;
     private final SessionMapper sessionMapper;
@@ -58,6 +62,7 @@ public class SessionServiceImpl implements SessionService {
 
         Session session = sessionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Session not found with id: " + id));
+        validateConcentrationForPatient(session.getPatient(), sessionDto.getConcentration());
         sessionMapper.updateEntityFromDTO(session, sessionDto);
         session = sessionRepository.save(session);
         return sessionMapper.toDto(session);
@@ -73,26 +78,26 @@ public class SessionServiceImpl implements SessionService {
     @Override
     @Transactional(readOnly = true)
     public List<SessionDto> findSessionsByPatientId(UUID patientId) { //TODO: CHECK NULLS
-        return sessionRepository.findByPatientIdOrderByDateDesc(patientId)
+        return sessionRepository.findByPatientIdOrderByDateDescHourDesc(patientId)
                 .stream().map(sessionMapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<SessionDto> findSessionsByPatientIdAndDateRange(UUID patientId, LocalDate startDate, LocalDate endDate) {
-        List<SessionDto> sessions = findSessionsByPatientId(patientId);
-        return sessions.stream()
-                .filter(sessionDto ->
-                        !sessionDto.getDate().isBefore(startDate) &&
-                        !sessionDto.getDate().isAfter(endDate))
-                .toList();
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("startDate must be before or equal to endDate");
+        }
+
+        return sessionRepository.findByPatientIdAndDateBetweenOrderByDateDescHourDesc(patientId, startDate, endDate)
+                .stream().map(sessionMapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<SessionDto> findSessionsByDay(UUID patientId, LocalDate day) { //TODO: CHECK NULLS
-        return findSessionsByPatientId(patientId)
-                .stream().filter(session -> session.getDate().equals(day)).toList();
+        return sessionRepository.findByPatientIdAndDateOrderByHourDesc(patientId, day)
+                .stream().map(sessionMapper::toDto).toList();
     }
 
     @Override
@@ -101,6 +106,7 @@ public class SessionServiceImpl implements SessionService {
                 .orElseThrow(() -> new RuntimeException("Patient not found: " + patientId));
 
         Session session = sessionMapper.toEntity(sessionDto);
+        validateConcentrationForPatient(patient, sessionDto.getConcentration());
 
         // 3) forzar ownership: paciente desde path
         session.setPatient(patient);
@@ -109,5 +115,52 @@ public class SessionServiceImpl implements SessionService {
 
         Session saved = sessionRepository.save(session);
         return sessionMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SessionSummaryDto summarizeSessionsByDay(UUID patientId, LocalDate day) {
+        return summarize(sessionRepository.findByPatientIdAndDateOrderByHourDesc(patientId, day));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SessionSummaryDto summarizeSessionsByMonth(UUID patientId, int year, int month) {
+        if (month < 1 || month > 12) {
+            throw new IllegalArgumentException("month must be between 1 and 12");
+        }
+
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+        return summarize(sessionRepository.findByPatientIdAndDateBetweenOrderByDateDescHourDesc(patientId, start, end));
+    }
+
+    private SessionSummaryDto summarize(List<Session> sessions) {
+        int totalInfusion = sessions.stream().mapToInt(Session::getInfusion).sum();
+        int totalDrainage = sessions.stream().mapToInt(Session::getDrainage).sum();
+        int totalBalance = sessions.stream().mapToInt(Session::getPartial).sum();
+        return new SessionSummaryDto(sessions.size(), totalInfusion, totalDrainage, totalBalance);
+    }
+
+    private void validateConcentrationForPatient(Patient patient, Float concentration) {
+        if (patient == null) {
+            throw new IllegalArgumentException("patient is required to validate concentration");
+        }
+        if (concentration == null) {
+            throw new IllegalArgumentException("concentration is required");
+        }
+
+        boolean fixed = FIXED_CONCENTRATIONS.stream()
+                .anyMatch(value -> sameConcentration(value, concentration));
+        boolean custom = patient.getCustomConcentrations().stream()
+                .anyMatch(value -> sameConcentration(value, concentration));
+
+        if (!fixed && !custom) {
+            throw new IllegalArgumentException("concentration is not allowed for this patient");
+        }
+    }
+
+    private boolean sameConcentration(float a, float b) {
+        return Math.abs(a - b) < 0.0001f;
     }
 }

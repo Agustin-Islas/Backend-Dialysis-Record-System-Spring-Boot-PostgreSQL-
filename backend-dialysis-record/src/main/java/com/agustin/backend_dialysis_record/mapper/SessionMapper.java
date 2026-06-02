@@ -65,13 +65,6 @@ public class SessionMapper implements GenericMapper<Session, SessionDto> {
         session.setConcentration(sessionDto.getConcentration());
         session.setInfusion(sessionDto.getInfusion());
         session.setDrainage(sessionDto.getDrainage());
-        session.setPartial(sessionDto.getPartial());
         session.setObservations(sessionDto.getObservations());
-        if (sessionDto.getPatientId() != null) {
-            Patient patient = patientRepository.getReferenceById(sessionDto.getPatientId());
-            session.setPatient(patient);
-        } else {
-            session.setPatient(null);
-        }
     }
 }

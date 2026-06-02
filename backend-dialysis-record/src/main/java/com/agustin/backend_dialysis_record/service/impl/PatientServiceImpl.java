@@ -1,28 +1,28 @@
 package com.agustin.backend_dialysis_record.service.impl;
 
-import com.agustin.backend_dialysis_record.dto.DoctorDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
 import com.agustin.backend_dialysis_record.dto.PatientMeDto;
 import com.agustin.backend_dialysis_record.mapper.PatientMapper;
-import com.agustin.backend_dialysis_record.model.Doctor;
 import com.agustin.backend_dialysis_record.model.Patient;
 import com.agustin.backend_dialysis_record.model.Session;
 import com.agustin.backend_dialysis_record.model.auth.UserAccount;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
-import com.agustin.backend_dialysis_record.repository.SessionRepository;
 import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
 import com.agustin.backend_dialysis_record.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @Transactional
 public class PatientServiceImpl implements PatientService {
+    private static final Set<Float> FIXED_CONCENTRATIONS = Set.of(1.5f, 2.4f, 3.8f);
+
     private final PatientRepository patientRepository;
     private final UserAccountRepository userAccountRepository;
     private final PatientMapper patientMapper;
@@ -51,6 +51,7 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public PatientDto create(PatientDto patientDto) {
+        validateCustomConcentrations(patientDto.getCustomConcentrations());
         Patient savePatient = patientRepository.save(patientMapper.toEntity(patientDto));
         return patientMapper.toDto(savePatient);
     }
@@ -62,6 +63,7 @@ public class PatientServiceImpl implements PatientService {
 
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + id));
+        validateCustomConcentrations(patientDto.getCustomConcentrations());
         patientMapper.updateEntityFromDTO(patient, patientDto);
         Patient savePatient = patientRepository.save(patient);
         return patientMapper.toDto(savePatient);
@@ -112,11 +114,40 @@ public class PatientServiceImpl implements PatientService {
         dto.setNumber(base.getNumber());
         dto.setDoctorId(base.getDoctorId());
         dto.setDoctorName(base.getDoctorName());
+        dto.setCustomConcentrations(base.getCustomConcentrations());
 
         //by user
         dto.setEmail(ua.getEmail());
         dto.setRole(ua.getRole());
 
         return dto;
+    }
+
+    private void validateCustomConcentrations(List<Float> values) {
+        if (values == null || values.isEmpty()) return;
+
+        Set<Integer> normalized = new HashSet<>();
+        for (Float value : values) {
+            if (value == null) {
+                throw new IllegalArgumentException("custom concentration cannot be null");
+            }
+            if (value < 0.1f || value > 10.0f) {
+                throw new IllegalArgumentException("custom concentrations must be between 0.1 and 10.0");
+            }
+            int key = Math.round(value * 10);
+            if (Math.abs(value * 10 - key) > 0.0001f) {
+                throw new IllegalArgumentException("custom concentrations must use one decimal");
+            }
+            if (FIXED_CONCENTRATIONS.stream().anyMatch(fixed -> sameConcentration(fixed, value))) {
+                throw new IllegalArgumentException("custom concentrations cannot duplicate fixed concentrations");
+            }
+            if (!normalized.add(key)) {
+                throw new IllegalArgumentException("custom concentrations cannot contain duplicates");
+            }
+        }
+    }
+
+    private boolean sameConcentration(float a, float b) {
+        return Math.abs(a - b) < 0.0001f;
     }
 }

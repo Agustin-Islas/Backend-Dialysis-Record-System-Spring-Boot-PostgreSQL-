@@ -4,6 +4,8 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Setter @Getter
@@ -38,4 +40,5 @@ public class PatientDto {
 
     private String doctorName;
     private UUID doctorId;
+    private List<Float> customConcentrations = new ArrayList<>();
 }

@@ -1,6 +1,7 @@
 package com.agustin.backend_dialysis_record.controller;
 
 import com.agustin.backend_dialysis_record.dto.DoctorDto;
+import com.agustin.backend_dialysis_record.dto.DoctorMeDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
 import com.agustin.backend_dialysis_record.service.DoctorService;
 import jakarta.validation.Valid;
@@ -30,7 +31,7 @@ public class DoctorController {
 
     @PreAuthorize("hasRole('DOCTOR')")
     @GetMapping("/me")
-    public ResponseEntity<DoctorDto> getMe(Authentication auth) { //TODO: crear DoctorMeDto que extiende DoctorDto
+    public ResponseEntity<DoctorMeDto> getMe(Authentication auth) {
         UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
         return ResponseEntity.ok(doctorService.getMyDoctor(userAccountId));
     }

@@ -1,11 +1,13 @@
 package com.agustin.backend_dialysis_record.service.impl;
 
 import com.agustin.backend_dialysis_record.dto.DoctorDto;
+import com.agustin.backend_dialysis_record.dto.DoctorMeDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
 import com.agustin.backend_dialysis_record.mapper.DoctorMapper;
 import com.agustin.backend_dialysis_record.mapper.PatientMapper;
 import com.agustin.backend_dialysis_record.model.Doctor;
 import com.agustin.backend_dialysis_record.model.Patient;
+import com.agustin.backend_dialysis_record.model.auth.UserAccount;
 import com.agustin.backend_dialysis_record.repository.DoctorRepository;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
@@ -124,11 +126,23 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public DoctorDto getMyDoctor(UUID userAccountId) {
+    public DoctorMeDto getMyDoctor(UUID userAccountId) {
+        UserAccount ua = userAccountRepository.findById(userAccountId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
         UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId)
                 .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
 
-        return findById(doctorId);
+        DoctorDto base = findById(doctorId);
+        DoctorMeDto dto = new DoctorMeDto();
+        dto.setId(base.getId());
+        dto.setName(base.getName());
+        dto.setSurname(base.getSurname());
+        dto.setPatientIds(base.getPatientIds());
+        dto.setEmail(ua.getEmail());
+        dto.setRole(ua.getRole());
+        dto.setPatientCount(base.getPatientIds() == null ? 0 : base.getPatientIds().size());
+        return dto;
     }
 
     @Override
