@@ -28,7 +28,8 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
-                "http://10.0.2.2:8080"
+                "http://10.0.2.2:8080",
+                "https://*.codemagic.app"
         ));
 
 
