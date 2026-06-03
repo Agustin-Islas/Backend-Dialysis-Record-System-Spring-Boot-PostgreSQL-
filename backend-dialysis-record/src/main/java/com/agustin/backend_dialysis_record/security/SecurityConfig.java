@@ -29,7 +29,8 @@ public class SecurityConfig {
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "http://10.0.2.2:8080",
-                "https://*.codemagic.app"
+                "https://*.codemagic.app",
+                "https://frontend-dialysis-record-system-flutter.onrender.com"
         ));
 
 
