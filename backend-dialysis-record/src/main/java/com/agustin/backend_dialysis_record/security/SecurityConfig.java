@@ -1,6 +1,7 @@
 package com.agustin.backend_dialysis_record.security;
 
 import com.agustin.backend_dialysis_record.security.jwt.JwtAuthFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,15 +23,18 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*,http://10.0.2.2:8080,https://*.codemagic.app,https://*.pages.dev}") String allowedOriginPatterns
+    ) {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:*",
-                "http://127.0.0.1:*",
-                "http://10.0.2.2:8080",
-                "https://*.codemagic.app"
-        ));
+        config.setAllowedOriginPatterns(
+                List.of(allowedOriginPatterns.split(","))
+                        .stream()
+                        .map(String::trim)
+                        .filter(pattern -> !pattern.isEmpty())
+                        .toList()
+        );
 
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
