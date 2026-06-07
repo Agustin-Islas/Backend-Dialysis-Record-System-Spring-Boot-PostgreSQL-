@@ -3,15 +3,18 @@ package com.agustin.backend_dialysis_record.repository;
 import com.agustin.backend_dialysis_record.model.auth.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 import java.util.UUID;
 
 public interface UserAccountRepository extends JpaRepository<UserAccount, UUID> {
 
-    Optional<UserAccount> findByEmailIgnoreCase(String email);
+    @Query("select ua from UserAccount ua where lower(trim(ua.email)) = lower(trim(:email))")
+    Optional<UserAccount> findByNormalizedEmail(@Param("email") String email);
 
-    boolean existsByEmail(String email);
+    @Query("select count(ua) > 0 from UserAccount ua where lower(trim(ua.email)) = lower(trim(:email))")
+    boolean existsByNormalizedEmail(@Param("email") String email);
 
     boolean existsByIdAndPatient_Id(UUID userAccountId, UUID patientId);
 

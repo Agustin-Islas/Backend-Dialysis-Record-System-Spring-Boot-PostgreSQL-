@@ -42,7 +42,7 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest req) {
         String email = req.getEmail().trim().toLowerCase();
-        UserAccount acc = userAccountRepository.findByEmailIgnoreCase(email)
+        UserAccount acc = userAccountRepository.findByNormalizedEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
         if (!acc.isEnabled()) {
@@ -68,7 +68,8 @@ public class AuthService {
     }
 
     public AuthResponse registerDoctor(RegisterDoctorRequest req) {
-        if (userAccountRepository.existsByEmail(req.email())) {
+        String email = req.email().trim().toLowerCase();
+        if (userAccountRepository.existsByNormalizedEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
 
@@ -78,7 +79,7 @@ public class AuthService {
         doctor = doctorRepo.save(doctor);
 
         UserAccount ua = new UserAccount();
-        ua.setEmail(req.email().trim().toLowerCase());
+        ua.setEmail(email);
         ua.setPasswordHash(passwordEncoder.encode(req.password()));
         ua.setRole(UserRole.DOCTOR);
         ua.setDoctor(doctor);
@@ -91,7 +92,8 @@ public class AuthService {
     }
 
     public AuthResponse registerPatient(RegisterPatientRequest req) {
-        if (userAccountRepository.existsByEmail(req.email())) {
+        String email = req.email().trim().toLowerCase();
+        if (userAccountRepository.existsByNormalizedEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
 
@@ -105,7 +107,7 @@ public class AuthService {
         patient = patientRepo.save(patient);
 
         UserAccount ua = new UserAccount();
-        ua.setEmail(req.email());
+        ua.setEmail(email);
         ua.setPasswordHash(passwordEncoder.encode(req.password()));
         ua.setRole(UserRole.PATIENT);
         ua.setPatient(patient);
