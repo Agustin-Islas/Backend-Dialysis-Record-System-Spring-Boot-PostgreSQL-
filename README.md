@@ -1,6 +1,6 @@
-# Backend - Dialysis Record System
+﻿# Backend - RenApp System
 
-Backend REST para Dialysis Record App. Expone autenticacion, autorizacion por rol, gestion de pacientes/doctores y registro de cambios de dialisis peritoneal.
+Backend REST para RenApp. Expone autenticacion, autorizacion por rol, gestion de pacientes/doctores y registro de cambios de dialisis peritoneal.
 
 ## Mision del backend
 
