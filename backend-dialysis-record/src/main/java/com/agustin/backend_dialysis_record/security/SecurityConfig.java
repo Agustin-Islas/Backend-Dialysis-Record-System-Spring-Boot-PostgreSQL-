@@ -69,7 +69,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Endpoints públicos: login, register, etc.
-                        .requestMatchers("/auth/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/auth/**", "/ping", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // Endpoints que requieren permiso especifico
                         .requestMatchers("/api/doctors/**").hasRole("DOCTOR")
