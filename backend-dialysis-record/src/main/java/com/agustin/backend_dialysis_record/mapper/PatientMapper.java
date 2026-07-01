@@ -75,13 +75,19 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patient.setDateOfBirth(patientDto.getDateOfBirth());
         patient.setAddress(patientDto.getAddress());
         patient.setNumber(patientDto.getNumber());
-        patient.setCustomConcentrations(copyCustomConcentrations(patientDto));
+        
+        if (patient.getCustomConcentrations() == null) {
+            patient.setCustomConcentrations(new ArrayList<>());
+        }
+        patient.getCustomConcentrations().clear();
+        if (patientDto.getCustomConcentrations() != null) {
+            patient.getCustomConcentrations().addAll(patientDto.getCustomConcentrations());
+        }
+        
         if (patientDto.getDoctorId() != null) {
             Doctor doctor = doctorRepository.getReferenceById(patientDto.getDoctorId());
             patient.setDoctor(doctor);
         }
-        //List<Session> sessions = sessionRepository.findByPatientIdOrderByDateDesc(patient.getId());
-        //patient.setSessions(sessions);
     }
 
     private ArrayList<Float> copyCustomConcentrations(PatientDto patientDto) {
