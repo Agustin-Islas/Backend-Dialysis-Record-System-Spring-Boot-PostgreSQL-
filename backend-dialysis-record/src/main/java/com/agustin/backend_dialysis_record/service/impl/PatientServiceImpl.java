@@ -21,7 +21,7 @@ import java.util.UUID;
 @Service
 @Transactional
 public class PatientServiceImpl implements PatientService {
-    private static final Set<Float> FIXED_CONCENTRATIONS = Set.of(1.5f, 2.4f, 3.8f);
+    private static final Set<Float> FIXED_CONCENTRATIONS = Set.of(1.5f, 2.3f, 3.8f);
 
     private final PatientRepository patientRepository;
     private final UserAccountRepository userAccountRepository;

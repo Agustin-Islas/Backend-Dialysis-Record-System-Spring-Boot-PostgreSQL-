@@ -13,6 +13,7 @@ public class SessionMapper implements GenericMapper<Session, SessionDto> {
     public SessionMapper(PatientRepository patientRepository) {
         this.patientRepository = patientRepository;
     }
+
     @Override
     public Session toEntity(SessionDto sessionDto) {
         if (sessionDto == null) { return null; }
@@ -42,6 +43,7 @@ public class SessionMapper implements GenericMapper<Session, SessionDto> {
         sessionDto.setId(session.getId());
         sessionDto.setDate(session.getDate());
         sessionDto.setHour(session.getHour());
+        sessionDto.setClinicalDate(session.getClinicalDate());
         sessionDto.setBag(session.getBag());
         sessionDto.setConcentration(session.getConcentration());
         sessionDto.setInfusion(session.getInfusion());

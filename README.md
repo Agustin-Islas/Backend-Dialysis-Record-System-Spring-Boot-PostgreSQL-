@@ -1,4 +1,4 @@
-﻿# Backend - RenApp System
+# Backend - RenApp System
 
 Backend REST para RenApp. Expone autenticacion, autorizacion por rol, gestion de pacientes/doctores y registro de cambios de dialisis peritoneal.
 
@@ -28,7 +28,7 @@ Implementado:
 - Consulta de sesiones por dia, rango y mes.
 - Resumen de sesiones por dia y mes.
 - Soft delete de pacientes y sesiones con campo `active`.
-- Validacion de concentraciones fijas: `1.5`, `2.4`, `3.8`.
+- Validacion de concentraciones fijas: `1.5`, `2.3`, `3.8`.
 - Concentraciones personalizadas por paciente.
 - CORS configurado para desarrollo local y deploys conocidos.
 - Manejo global de errores con DTO estandar.

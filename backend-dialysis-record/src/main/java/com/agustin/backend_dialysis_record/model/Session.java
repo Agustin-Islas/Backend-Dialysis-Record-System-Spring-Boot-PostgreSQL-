@@ -18,6 +18,8 @@ import java.util.UUID;
 @SQLDelete(sql = "UPDATE session SET active = false WHERE id = ?")
 @SQLRestriction("active = true")
 public class Session {
+    public static final LocalTime CLINICAL_CUTOFF = LocalTime.of(5, 0);
+
     @Id
     @Column(nullable = false, updatable = false)
     private UUID id;
@@ -27,6 +29,10 @@ public class Session {
 
     private LocalDate date;
     private LocalTime hour;
+    
+    @Column(name = "clinical_date")
+    private LocalDate clinicalDate;
+
     private int bag;
     private float concentration;
     private int infusion;
@@ -48,19 +54,36 @@ public class Session {
         this.observations = observations;
     }
 
+    public LocalDate getClinicalDate() {
+        if (clinicalDate == null && date != null) {
+            computeClinicalDate();
+        }
+        return clinicalDate != null ? clinicalDate : date;
+    }
+
     @PrePersist
     public void prePersist() {
         if (id == null) id = UUID.randomUUID();
         computePartial();
+        computeClinicalDate();
     }
 
     private void computePartial() {
         this.partial = this.infusion - this.drainage;
     }
 
+    public void computeClinicalDate() {
+        if (this.date != null && this.hour != null && this.hour.isBefore(CLINICAL_CUTOFF)) {
+            this.clinicalDate = this.date.minusDays(1);
+        } else if (this.date != null) {
+            this.clinicalDate = this.date;
+        }
+    }
+
     @PreUpdate
     public void preUpdate() {
         computePartial();
+        computeClinicalDate();
     }
 
 }

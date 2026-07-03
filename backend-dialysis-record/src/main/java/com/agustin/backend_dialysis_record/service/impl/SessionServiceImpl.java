@@ -20,7 +20,7 @@ import java.util.UUID;
 @Service
 @Transactional
 public class SessionServiceImpl implements SessionService {
-    private static final Set<Float> FIXED_CONCENTRATIONS = Set.of(1.5f, 2.4f, 3.8f);
+    private static final Set<Float> FIXED_CONCENTRATIONS = Set.of(1.5f, 2.3f, 3.8f);
 
     private final SessionRepository sessionRepository;
     private final PatientRepository patientRepository;
@@ -51,6 +51,7 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public SessionDto create(SessionDto sessionDto) {
         Session session = sessionMapper.toEntity(sessionDto);
+        session.computeClinicalDate();
         session = sessionRepository.save(session);
         return sessionMapper.toDto(session);
     }
@@ -64,6 +65,7 @@ public class SessionServiceImpl implements SessionService {
                 .orElseThrow(() -> new RuntimeException("Session not found with id: " + id));
         validateConcentrationForPatient(session.getPatient(), sessionDto.getConcentration());
         sessionMapper.updateEntityFromDTO(session, sessionDto);
+        session.computeClinicalDate();
         session = sessionRepository.save(session);
         return sessionMapper.toDto(session);
     }
@@ -78,7 +80,7 @@ public class SessionServiceImpl implements SessionService {
     @Override
     @Transactional(readOnly = true)
     public List<SessionDto> findSessionsByPatientId(UUID patientId) { //TODO: CHECK NULLS
-        return sessionRepository.findByPatientIdOrderByDateDescHourDesc(patientId)
+        return sessionRepository.findByPatientIdOrderByClinicalDateDescDateDescHourDesc(patientId)
                 .stream().map(sessionMapper::toDto).toList();
     }
 
@@ -89,14 +91,14 @@ public class SessionServiceImpl implements SessionService {
             throw new IllegalArgumentException("startDate must be before or equal to endDate");
         }
 
-        return sessionRepository.findByPatientIdAndDateBetweenOrderByDateDescHourDesc(patientId, startDate, endDate)
+        return sessionRepository.findByPatientIdAndClinicalDateBetweenOrderByClinicalDateDescDateDescHourDesc(patientId, startDate, endDate)
                 .stream().map(sessionMapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<SessionDto> findSessionsByDay(UUID patientId, LocalDate day) { //TODO: CHECK NULLS
-        return sessionRepository.findByPatientIdAndDateOrderByHourDesc(patientId, day)
+        return sessionRepository.findByPatientIdAndClinicalDateOrderByDateDescHourDesc(patientId, day)
                 .stream().map(sessionMapper::toDto).toList();
     }
 
@@ -112,6 +114,7 @@ public class SessionServiceImpl implements SessionService {
         session.setPatient(patient);
 
         if (session.getDate() == null) session.setDate(LocalDate.now());
+        session.computeClinicalDate();
 
         Session saved = sessionRepository.save(session);
         return sessionMapper.toDto(saved);
@@ -120,7 +123,7 @@ public class SessionServiceImpl implements SessionService {
     @Override
     @Transactional(readOnly = true)
     public SessionSummaryDto summarizeSessionsByDay(UUID patientId, LocalDate day) {
-        return summarize(sessionRepository.findByPatientIdAndDateOrderByHourDesc(patientId, day));
+        return summarize(sessionRepository.findByPatientIdAndClinicalDateOrderByDateDescHourDesc(patientId, day));
     }
 
     @Override
@@ -132,7 +135,7 @@ public class SessionServiceImpl implements SessionService {
 
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-        return summarize(sessionRepository.findByPatientIdAndDateBetweenOrderByDateDescHourDesc(patientId, start, end));
+        return summarize(sessionRepository.findByPatientIdAndClinicalDateBetweenOrderByClinicalDateDescDateDescHourDesc(patientId, start, end));
     }
 
     private SessionSummaryDto summarize(List<Session> sessions) {

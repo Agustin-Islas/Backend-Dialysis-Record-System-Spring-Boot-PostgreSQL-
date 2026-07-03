@@ -19,6 +19,8 @@ public class SessionDto {
     @NotNull(message = "hour is required")
     private LocalTime hour;
 
+    private LocalDate clinicalDate;
+
     @NotNull(message = "bag is required")
     @Min(value = 0, message = "bag must be >= 0 ")
     private Integer bag;
