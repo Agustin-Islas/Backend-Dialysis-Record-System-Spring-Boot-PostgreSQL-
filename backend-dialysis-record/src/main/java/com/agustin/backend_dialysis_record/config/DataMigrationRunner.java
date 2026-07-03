@@ -73,6 +73,18 @@ public class DataMigrationRunner implements CommandLineRunner {
                 log.debug("Error en backfill de clinical_date: {}", e.getMessage());
             }
 
+            // Fix de bolsa nocturna para el 30/06/2026 (cargada erróneamente con bolsa 1 antes del fix de cálculo de día clínico)
+            try {
+                int nightBagFixed = jdbcTemplate.update(
+                        "UPDATE session SET bag = 3 WHERE clinical_date = '2026-06-30' AND hour < '05:00:00' AND bag = 1"
+                );
+                if (nightBagFixed > 0) {
+                    log.info("Corregido el número de bolsa del turno trasnoche del 30/06/2026 a bolsa = 3 (modificadas: {} sesiones)", nightBagFixed);
+                }
+            } catch (Exception e) {
+                log.debug("Error en fix de bolsa nocturna 30/06: {}", e.getMessage());
+            }
+
         } catch (Exception e) {
             log.warn("Excepción leve durante la migración automática de datos: {}", e.getMessage());
         }
