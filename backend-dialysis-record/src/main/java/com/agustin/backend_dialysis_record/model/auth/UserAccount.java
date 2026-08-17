@@ -26,8 +26,8 @@ public class UserAccount {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false)
-    private String passwordHash;
+    @Column(nullable = false, unique = true)
+    private UUID authId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -35,6 +35,12 @@ public class UserAccount {
 
     @Column(nullable = false)
     private boolean enabled = true;
+
+    // LEGACY: Columna conservada temporalmente. Los hashes bcrypt de usuarios
+    // migrados permanecen como evidencia de continuidad. Nuevos registros no la usan.
+    // Fase futura: ALTER TABLE user_account DROP COLUMN password_hash;
+    @Column(name = "password_hash")
+    private String passwordHash;
 
     @OneToOne(fetch = FetchType.LAZY)
     private Doctor doctor;

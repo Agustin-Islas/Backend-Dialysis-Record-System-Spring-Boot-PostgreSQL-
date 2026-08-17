@@ -29,32 +29,28 @@ public class DoctorController {
        /me (Self endpoints)
        ===================================================== */
 
-    @PreAuthorize("hasRole('DOCTOR')")
     @GetMapping("/me")
     public ResponseEntity<DoctorMeDto> getMe(Authentication auth) {
-        UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
-        return ResponseEntity.ok(doctorService.getMyDoctor(userAccountId));
+        UUID authId = UUID.fromString(auth.getName());
+        return ResponseEntity.ok(doctorService.getMyDoctor(authId));
     }
 
-    @PreAuthorize("hasRole('DOCTOR')")
     @GetMapping("/me/patients")
     public ResponseEntity<List<PatientDto>> getMyPatients(Authentication auth) {
-        UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
-        return ResponseEntity.ok(doctorService.getMyPatients(userAccountId));
+        UUID authId = UUID.fromString(auth.getName());
+        return ResponseEntity.ok(doctorService.getMyPatients(authId));
     }
 
-    @PreAuthorize("hasRole('DOCTOR')")
     @PostMapping("/me/patients/{patientId}")
     public ResponseEntity<PatientDto> addPatientToMe(Authentication auth, @PathVariable UUID patientId) {
-        UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
-        return ResponseEntity.ok(doctorService.addPatientToMyDoctor(userAccountId, patientId));
+        UUID authId = UUID.fromString(auth.getName());
+        return ResponseEntity.ok(doctorService.addPatientToMyDoctor(authId, patientId));
     }
 
-    @PreAuthorize("hasRole('DOCTOR')")
     @DeleteMapping("/me/patients/{patientId}")
     public ResponseEntity<Void> removePatientFromMe(Authentication auth, @PathVariable UUID patientId) {
-        UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
-        doctorService.removePatientFromMyDoctor(userAccountId, patientId);
+        UUID authId = UUID.fromString(auth.getName());
+        doctorService.removePatientFromMyDoctor(authId, patientId);
         return ResponseEntity.noContent().build();
     }
 
@@ -62,57 +58,57 @@ public class DoctorController {
        Admin/Managed endpoints (by doctorId)
        ===================================================== */
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@authz.canAccessDoctor(#doctorId)")
     @PatchMapping("/{doctorId}/activate")
     public ResponseEntity<DoctorDto> activateDoctor(@PathVariable UUID doctorId) {
         return ResponseEntity.ok(doctorService.activate(doctorId));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @authz.canAccessDoctor(#doctorId)")
+    @PreAuthorize("@authz.canAccessDoctor(#doctorId)")
     @PostMapping("/{doctorId}/patients/{patientId}")
     public ResponseEntity<PatientDto> addPatient(@PathVariable UUID doctorId, @PathVariable UUID patientId) {
         return ResponseEntity.ok(doctorService.addPatientToDoctor(doctorId, patientId));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @authz.canAccessDoctor(#doctorId)")
+    @PreAuthorize("@authz.canAccessDoctor(#doctorId)")
     @GetMapping("/{doctorId}/patients")
     public ResponseEntity<List<PatientDto>> getPatientsByDoctor(@PathVariable UUID doctorId) {
         return ResponseEntity.ok(doctorService.getPatientsByDoctor(doctorId));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @authz.canAccessDoctor(#doctorId)")
+    @PreAuthorize("@authz.canAccessDoctor(#doctorId)")
     @DeleteMapping("/{doctorId}/patients/{patientId}")
     public ResponseEntity<Void> removePatient(@PathVariable UUID doctorId, @PathVariable UUID patientId) {
         doctorService.removePatientFromDoctor(doctorId, patientId);
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@authz.isAdmin()")
     @PostMapping
     public ResponseEntity<DoctorDto> createDoctor(@Valid @RequestBody DoctorDto doctorDto) {
         return ResponseEntity.ok(doctorService.create(doctorDto));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@authz.isAdmin()")
     @GetMapping
     public ResponseEntity<List<DoctorDto>> getAllDoctors() {
         return ResponseEntity.ok(doctorService.findAll());
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @authz.canAccessDoctor(#doctorId)")
+    @PreAuthorize("@authz.canAccessDoctor(#doctorId)")
     @GetMapping("/{doctorId}")
     public ResponseEntity<DoctorDto> getDoctorById(@PathVariable UUID doctorId) {
         return ResponseEntity.ok(doctorService.findById(doctorId));
     }
 
-    @PreAuthorize("hasRole('ADMIN') or @authz.canAccessDoctor(#doctorId)")
+    @PreAuthorize("@authz.canAccessDoctor(#doctorId)")
     @PutMapping("/{doctorId}")
     public ResponseEntity<DoctorDto> updateDoctor(@PathVariable UUID doctorId,
                                                   @Valid @RequestBody DoctorDto doctorDto) {
         return ResponseEntity.ok(doctorService.update(doctorId, doctorDto));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@authz.isAdmin()")
     @DeleteMapping("/{doctorId}")
     public ResponseEntity<Void> deleteDoctorById(@PathVariable UUID doctorId) {
         doctorService.delete(doctorId);

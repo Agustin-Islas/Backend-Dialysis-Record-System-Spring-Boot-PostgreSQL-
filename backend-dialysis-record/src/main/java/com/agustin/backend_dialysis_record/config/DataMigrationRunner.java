@@ -85,6 +85,21 @@ public class DataMigrationRunner implements CommandLineRunner {
                 log.debug("Error en fix de bolsa nocturna 30/06: {}", e.getMessage());
             }
 
+            // Fase 1 de deprecación: hacer password_hash nullable y limpiar valores dummy
+            try {
+                jdbcTemplate.execute(
+                        "ALTER TABLE user_account ALTER COLUMN password_hash DROP NOT NULL"
+                );
+                int dummyCleared = jdbcTemplate.update(
+                        "UPDATE user_account SET password_hash = NULL WHERE password_hash = 'dummy_hash'"
+                );
+                if (dummyCleared > 0) {
+                    log.info("Limpiados {} registros con password_hash='dummy_hash' → NULL", dummyCleared);
+                }
+            } catch (Exception e) {
+                log.debug("password_hash ya es nullable o no existe: {}", e.getMessage());
+            }
+
         } catch (Exception e) {
             log.warn("Excepción leve durante la migración automática de datos: {}", e.getMessage());
         }

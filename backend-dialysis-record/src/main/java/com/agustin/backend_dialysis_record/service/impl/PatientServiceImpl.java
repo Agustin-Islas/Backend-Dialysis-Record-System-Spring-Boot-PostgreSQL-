@@ -92,11 +92,11 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public PatientMeDto getMyPatient(UUID userAccountId) {
-        UserAccount ua = userAccountRepository.findById(userAccountId)
-                .orElseThrow(() -> new RuntimeException("Account non exist"));;
+    public PatientMeDto getMyPatient(UUID authId) {
+        UserAccount ua = userAccountRepository.findByAuthId(authId)
+                .orElseThrow(() -> new RuntimeException("Account non exist"));
 
-        UUID patientId = userAccountRepository.findPatientIdByUserAccountId(userAccountId)
+        UUID patientId = userAccountRepository.findPatientIdByUserAccountId(ua.getId())
                 .orElseThrow(() -> new RuntimeException("Patient not linked to this account"));
 
 

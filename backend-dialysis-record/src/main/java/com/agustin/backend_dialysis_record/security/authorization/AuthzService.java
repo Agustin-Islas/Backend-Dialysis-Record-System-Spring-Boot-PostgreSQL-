@@ -1,5 +1,6 @@
 package com.agustin.backend_dialysis_record.security.authorization;
 
+import com.agustin.backend_dialysis_record.model.auth.UserAccount;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.SessionRepository;
 import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
@@ -24,43 +25,52 @@ public class AuthzService {
         this.sessionRepository = sessionRepository;
     }
 
+    // ── Helpers de rol (para @PreAuthorize en endpoints de listado/admin) ──
+
+    /** Retorna true si el usuario autenticado tiene rol ADMIN. */
+    public boolean isAdmin() {
+        UserAccount ua = getCurrentUserAccount();
+        return ua != null && "ADMIN".equals(ua.getRole().name());
+    }
+
+    /** Retorna true si el usuario autenticado tiene rol DOCTOR o ADMIN. */
+    public boolean isDoctorOrAdmin() {
+        UserAccount ua = getCurrentUserAccount();
+        if (ua == null) return false;
+        String role = ua.getRole().name();
+        return "DOCTOR".equals(role) || "ADMIN".equals(role);
+    }
+
+    // ── Acceso granular por recurso ──
+
     public boolean canAccessDoctor(UUID doctorId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getPrincipal() == null) return false;
+        UserAccount userAccount = getCurrentUserAccount();
+        if (userAccount == null) return false;
 
-        UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
+        if ("ADMIN".equals(userAccount.getRole().name())) return true;
 
-        boolean isAdmin = has(auth, "ROLE_ADMIN");
-        if (isAdmin) return true;
+        if ("DOCTOR".equals(userAccount.getRole().name())) {
+            if (userAccount.getDoctor() == null) return false;
+            return userAccount.getDoctor().getId().equals(doctorId);
+        }
 
-        boolean isDoctor = has(auth, "ROLE_DOCTOR");
-        if (!isDoctor) return false;
-
-        // ownership: el doctor asociado a ese userAccount es este doctorId
-        return userAccountRepository.existsByIdAndDoctor_Id(userAccountId, doctorId);
+        return false;
     }
 
     public boolean canAccessPatient(UUID patientId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getPrincipal() == null) return false;
+        UserAccount userAccount = getCurrentUserAccount();
+        if (userAccount == null) return false;
 
-        UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
+        if ("ADMIN".equals(userAccount.getRole().name())) return true;
 
-        boolean isAdmin = has(auth, "ROLE_ADMIN");
-        if (isAdmin) return true;
-
-        boolean isDoctor = has(auth, "ROLE_DOCTOR");
-        boolean isPatient = has(auth, "ROLE_PATIENT");
-
-        if (isDoctor) {
-            UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId).orElse(null);
-            if (doctorId == null) return false;
-            return patientRepository.existsByIdAndDoctor_Id(patientId, doctorId);
+        if ("DOCTOR".equals(userAccount.getRole().name())) {
+            if (userAccount.getDoctor() == null) return false;
+            return patientRepository.existsByIdAndDoctor_Id(patientId, userAccount.getDoctor().getId());
         }
 
-        if (isPatient) {
-            // ownership vía UserAccount -> patient (sin tocar Patient)
-            return userAccountRepository.existsByIdAndPatient_Id(userAccountId, patientId);
+        if ("PATIENT".equals(userAccount.getRole().name())) {
+            if (userAccount.getPatient() == null) return false;
+            return userAccount.getPatient().getId().equals(patientId);
         }
 
         return false;
@@ -72,7 +82,12 @@ public class AuthzService {
         return canAccessPatient(patientId);
     }
 
-    private boolean has(Authentication auth, String role) {
-        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+    // ── Método privado para obtener el UserAccount del usuario autenticado ──
+
+    private UserAccount getCurrentUserAccount() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) return null;
+        UUID authId = UUID.fromString(auth.getName());
+        return userAccountRepository.findByAuthId(authId).orElse(null);
     }
 }

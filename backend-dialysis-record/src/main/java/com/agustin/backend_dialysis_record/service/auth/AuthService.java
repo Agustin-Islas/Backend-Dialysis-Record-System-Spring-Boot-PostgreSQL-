@@ -1,7 +1,5 @@
 package com.agustin.backend_dialysis_record.service.auth;
 
-import com.agustin.backend_dialysis_record.dto.auth.AuthResponse;
-import com.agustin.backend_dialysis_record.dto.auth.LoginRequest;
 import com.agustin.backend_dialysis_record.dto.auth.RegisterDoctorRequest;
 import com.agustin.backend_dialysis_record.dto.auth.RegisterPatientRequest;
 import com.agustin.backend_dialysis_record.model.Doctor;
@@ -11,13 +9,12 @@ import com.agustin.backend_dialysis_record.model.auth.UserRole;
 import com.agustin.backend_dialysis_record.repository.DoctorRepository;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
-import com.agustin.backend_dialysis_record.security.jwt.JwtService;
-import com.agustin.backend_dialysis_record.security.jwt.RefreshTokenService;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -26,52 +23,24 @@ public class AuthService {
     private final UserAccountRepository userAccountRepository;
     private final PatientRepository patientRepo;
     private final DoctorRepository doctorRepo;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final RefreshTokenService refreshTokenService;
 
-    public AuthService(UserAccountRepository userAccountRepository, PatientRepository patientRepo, DoctorRepository doctorRepo,
-                       PasswordEncoder passwordEncoder,
-                       JwtService jwtService, RefreshTokenService refreshTokenService) {
+    public AuthService(UserAccountRepository userAccountRepository, PatientRepository patientRepo, DoctorRepository doctorRepo) {
         this.userAccountRepository = userAccountRepository;
         this.patientRepo = patientRepo;
         this.doctorRepo = doctorRepo;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-        this.refreshTokenService = refreshTokenService;
     }
 
-    public AuthResponse login(LoginRequest req) {
-        String email = req.getEmail().trim().toLowerCase();
-        UserAccount acc = userAccountRepository.findByNormalizedEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
-
-        if (!acc.isEnabled()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account disabled");
+    public void registerDoctor(RegisterDoctorRequest req, UUID authId, String email) {
+        if (userAccountRepository.existsByAuthId(authId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Doctor profile already linked to this auth account");
         }
 
-        boolean ok = passwordEncoder.matches(req.getPassword(), acc.getPasswordHash());
-        if (!ok) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-        }
-
-        String token = jwtService.generateAccessToken(acc);
-        var issuedRefresh = refreshTokenService.issue(acc);
-
-        return new AuthResponse(token, issuedRefresh.plainToken());
-    }
-
-    public AuthResponse refresh(String refreshTokenPlain) {
-        var rotated = refreshTokenService.rotate(refreshTokenPlain);
-
-        String access = jwtService.generateAccessToken(rotated.entity().getUserAccount());
-        return new AuthResponse(access, rotated.plainToken());
-    }
-
-    public AuthResponse registerDoctor(RegisterDoctorRequest req) {
-        String email = req.email().trim().toLowerCase();
-        if (userAccountRepository.existsByNormalizedEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+        var existingByEmail = userAccountRepository.findByNormalizedEmail(email);
+        if (existingByEmail.isPresent()) {
+            UserAccount ua = existingByEmail.get();
+            ua.setAuthId(authId);
+            userAccountRepository.save(ua);
+            return;
         }
 
         Doctor doctor = new Doctor();
@@ -80,22 +49,24 @@ public class AuthService {
         doctor = doctorRepo.save(doctor);
 
         UserAccount ua = new UserAccount();
-        ua.setEmail(email);
-        ua.setPasswordHash(passwordEncoder.encode(req.password()));
+        ua.setEmail(email.trim().toLowerCase());
+        ua.setAuthId(authId);
         ua.setRole(UserRole.DOCTOR);
         ua.setDoctor(doctor);
         userAccountRepository.save(ua);
-
-        String token = jwtService.generateAccessToken(ua); // incluye role + id
-        String refresh = refreshTokenService.issue(ua).plainToken();
-
-        return new AuthResponse(token, refresh);
     }
 
-    public AuthResponse registerPatient(RegisterPatientRequest req) {
-        String email = req.email().trim().toLowerCase();
-        if (userAccountRepository.existsByNormalizedEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+    public void registerPatient(RegisterPatientRequest req, UUID authId, String email) {
+        if (userAccountRepository.existsByAuthId(authId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Patient profile already linked to this auth account");
+        }
+
+        var existingByEmail = userAccountRepository.findByNormalizedEmail(email);
+        if (existingByEmail.isPresent()) {
+            UserAccount ua = existingByEmail.get();
+            ua.setAuthId(authId);
+            userAccountRepository.save(ua);
+            return;
         }
 
         Patient patient = new Patient();
@@ -108,24 +79,11 @@ public class AuthService {
         patient = patientRepo.save(patient);
 
         UserAccount ua = new UserAccount();
-        ua.setEmail(email);
-        ua.setPasswordHash(passwordEncoder.encode(req.password()));
+        ua.setEmail(email.trim().toLowerCase());
+        ua.setAuthId(authId);
         ua.setRole(UserRole.PATIENT);
         ua.setPatient(patient);
         userAccountRepository.save(ua);
-
-        String token = jwtService.generateAccessToken(ua); // incluye role + id
-        String refresh = refreshTokenService.issue(ua).plainToken();
-
-        return new AuthResponse(token, refresh);
-    }
-
-    public void logout(String refreshToken) {
-        refreshTokenService.revoke(refreshToken);
-    }
-
-    public void logoutAll(UserAccount userAccount) {
-        refreshTokenService.revokeAll(userAccount);
     }
 
 }

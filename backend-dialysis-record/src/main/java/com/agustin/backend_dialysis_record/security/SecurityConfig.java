@@ -1,6 +1,5 @@
 package com.agustin.backend_dialysis_record.security;
 
-import com.agustin.backend_dialysis_record.security.jwt.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,18 +7,51 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jose.proc.JWSKeySelector;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
-@Configuration // <- clase de configuración de Spring
-@EnableMethodSecurity // <- habilita @PreAuthorize, @PostAuthorize, etc.
+@Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
+
+    @Value("classpath:supabase-jwk.json")
+    private Resource jwkResource;
+
+    @Bean
+    public JwtDecoder jwtDecoder() throws Exception {
+        // Leemos la llave pública desde el archivo estático en resources/
+        String jwkJson = new String(jwkResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        
+        // Supabase JWKS root tiene un array "keys"
+        JWKSet jwkSet = JWKSet.parse(jwkJson);
+        JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(jwkSet);
+        
+        // Configuramos el procesador nativo de Nimbus para aceptar firmas ES256 (P-256)
+        ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
+        JWSKeySelector<SecurityContext> jwsKeySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.ES256, jwkSource);
+        jwtProcessor.setJWSKeySelector(jwsKeySelector);
+        
+        return new NimbusJwtDecoder(jwtProcessor);
+    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -32,7 +64,6 @@ public class SecurityConfig {
                 "https://*.codemagic.app",
                 "https://frontend-dialysis-record-system-flutter.onrender.com"
         ));
-
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
@@ -52,40 +83,32 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
-        //System.out.println(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("1234")); @TODO: gen encode
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         return http
                 .cors(withDefaults())
                 // 1) CSRF: en APIs REST stateless normalmente se desactiva
-                //    (CSRF protege formularios/sesiones de navegador)
                 .csrf(csrf -> csrf.disable())
 
                 // 2) SessionManagement: STATELESS = no se guarda sesión de usuario en servidor
-                //    Cada request debe traer su JWT
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // 3) Reglas de autorización por rutas
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Endpoints públicos: login, register, etc.
-                        .requestMatchers("/auth/**", "/ping", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // Endpoints públicos
+                        .requestMatchers("/ping", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // Endpoints que requieren permiso especifico
-                        .requestMatchers("/api/doctors/**").hasRole("DOCTOR")
-                        .requestMatchers("/api/patients/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
-                        .requestMatchers("/api/sessions/**").hasAnyRole("DOCTOR", "PATIENT")
+                        // Rutas protegidas
+                        .requestMatchers("/api/doctors/**").authenticated()
+                        .requestMatchers("/api/patients/**").authenticated()
+                        .requestMatchers("/api/sessions/**").authenticated()
 
-                        .requestMatchers("/auth/logout").permitAll()
-                        .requestMatchers("/auth/logout/all").authenticated()
-
-                        // Cualquier otra ruta requiere autenticación
                         .anyRequest().authenticated()
                 )
 
-                // 4) Insertamos nuestro filtro ANTES del filtro estándar de username/password
-                //    Así, cuando llegue al controller, el SecurityContext ya está seteado
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // 4) Habilitar Resource Server para Supabase (OAuth2)
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
 
                 // 5) Construir la cadena final
                 .build();

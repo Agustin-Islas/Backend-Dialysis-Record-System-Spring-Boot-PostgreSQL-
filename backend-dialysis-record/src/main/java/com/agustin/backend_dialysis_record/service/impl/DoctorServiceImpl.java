@@ -126,11 +126,11 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public DoctorMeDto getMyDoctor(UUID userAccountId) {
-        UserAccount ua = userAccountRepository.findById(userAccountId)
+    public DoctorMeDto getMyDoctor(UUID authId) {
+        UserAccount ua = userAccountRepository.findByAuthId(authId)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
 
-        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId)
+        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(ua.getId())
                 .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
 
         DoctorDto base = findById(doctorId);
@@ -146,24 +146,33 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public List<PatientDto> getMyPatients(UUID userAccountId) {
-        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId)
+    public List<PatientDto> getMyPatients(UUID authId) {
+        UserAccount ua = userAccountRepository.findByAuthId(authId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(ua.getId())
                 .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
 
         return getPatientsByDoctor(doctorId);
     }
 
     @Override
-    public PatientDto addPatientToMyDoctor(UUID userAccountId, UUID patientId) {
-        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId)
+    public PatientDto addPatientToMyDoctor(UUID authId, UUID patientId) {
+        UserAccount ua = userAccountRepository.findByAuthId(authId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(ua.getId())
                 .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
 
         return addPatientToDoctor(doctorId, patientId);
     }
 
     @Override
-    public void removePatientFromMyDoctor(UUID userAccountId, UUID patientId) {
-        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(userAccountId)
+    public void removePatientFromMyDoctor(UUID authId, UUID patientId) {
+        UserAccount ua = userAccountRepository.findByAuthId(authId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(ua.getId())
                 .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
 
         removePatientFromDoctor(doctorId, patientId);

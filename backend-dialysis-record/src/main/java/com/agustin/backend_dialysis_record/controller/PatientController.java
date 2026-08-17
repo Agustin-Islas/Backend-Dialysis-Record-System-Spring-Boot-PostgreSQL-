@@ -36,21 +36,21 @@ public class PatientController {
        PATIENTS
        ===================================================== */
 
+    @PreAuthorize("@authz.isDoctorOrAdmin()")
     @PostMapping
     public ResponseEntity<PatientDto> create(@Valid @RequestBody PatientDto patientDto) {
         PatientDto patient = patientService.create(patientDto);
         return ResponseEntity.ok(patient);
     }
 
-    @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/me")
     public ResponseEntity<PatientMeDto> getMe(Authentication auth) {
-        UUID userAccountId = UUID.fromString(auth.getPrincipal().toString());
-        return ResponseEntity.ok(patientService.getMyPatient(userAccountId));
+        UUID authId = UUID.fromString(auth.getName());
+        return ResponseEntity.ok(patientService.getMyPatient(authId));
     }
 
-    // Listar pacientes: doctor ve solo los suyos (filtrado en service/repo), admin ve todos
-    @PreAuthorize("hasRole('DOCTOR') or hasRole('ADMIN')")
+    // Listar pacientes: solo doctores y admin
+    @PreAuthorize("@authz.isDoctorOrAdmin()")
     @GetMapping
     public ResponseEntity<List<PatientDto>> getAllPatients() {
         List<PatientDto> patients = patientService.findAll();
@@ -73,14 +73,14 @@ public class PatientController {
         return ResponseEntity.ok(patient);
     }
 
-    @PreAuthorize("(hasRole('DOCTOR') or hasRole('ADMIN')) and @authz.canAccessPatient(#patientId)")
+    @PreAuthorize("@authz.canAccessPatient(#patientId)")
     @DeleteMapping("/{patientId}")
     public ResponseEntity<Void> delete(@PathVariable UUID patientId) {
         patientService.delete(patientId);
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("(hasRole('DOCTOR') or hasRole('ADMIN')) and @authz.canAccessPatient(#patientId)")
+    @PreAuthorize("@authz.canAccessPatient(#patientId)")
     @PatchMapping("/{patientId}/activate")
     public ResponseEntity<PatientDto> activatePatient(@PathVariable UUID patientId) {
         PatientDto patientDto = patientService.activate(patientId);

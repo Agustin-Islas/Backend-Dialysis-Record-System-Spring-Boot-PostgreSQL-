@@ -10,9 +10,7 @@ public record RegisterDoctorRequest(
         @Size(max = 254)
         String email,
 
-        @NotBlank
-        @Size(min = 8, max = 72)
-        String password,
+        // password eliminado: la identidad es gestionada por Supabase Auth
 
         @NotBlank
         @Size(max = 60)

@@ -10,6 +10,10 @@ import java.util.UUID;
 
 public interface UserAccountRepository extends JpaRepository<UserAccount, UUID> {
 
+    Optional<UserAccount> findByAuthId(UUID authId);
+
+    boolean existsByAuthId(UUID authId);
+
     @Query("select ua from UserAccount ua where lower(trim(ua.email)) = lower(trim(:email))")
     Optional<UserAccount> findByNormalizedEmail(@Param("email") String email);
 
