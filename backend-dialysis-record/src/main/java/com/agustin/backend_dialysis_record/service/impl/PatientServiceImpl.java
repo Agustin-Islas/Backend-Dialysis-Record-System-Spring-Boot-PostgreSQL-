@@ -94,10 +94,10 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public PatientMeDto getMyPatient(UUID authId) {
         UserAccount ua = userAccountRepository.findByAuthId(authId)
-                .orElseThrow(() -> new RuntimeException("Account non exist"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Account non exist"));
 
         UUID patientId = userAccountRepository.findPatientIdByUserAccountId(ua.getId())
-                .orElseThrow(() -> new RuntimeException("Patient not linked to this account"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Patient not linked to this account"));
 
 
         PatientDto base = findById(patientId); // <- devuelve PatientDto

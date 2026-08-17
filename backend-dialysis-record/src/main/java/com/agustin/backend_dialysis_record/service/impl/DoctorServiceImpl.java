@@ -128,10 +128,10 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public DoctorMeDto getMyDoctor(UUID authId) {
         UserAccount ua = userAccountRepository.findByAuthId(authId)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Account not found"));
 
         UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(ua.getId())
-                .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Doctor not linked to this account"));
 
         DoctorDto base = findById(doctorId);
         DoctorMeDto dto = new DoctorMeDto();
@@ -148,10 +148,10 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public List<PatientDto> getMyPatients(UUID authId) {
         UserAccount ua = userAccountRepository.findByAuthId(authId)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Account not found"));
 
         UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(ua.getId())
-                .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Doctor not linked to this account"));
 
         return getPatientsByDoctor(doctorId);
     }
@@ -159,10 +159,10 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public PatientDto addPatientToMyDoctor(UUID authId, UUID patientId) {
         UserAccount ua = userAccountRepository.findByAuthId(authId)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Account not found"));
 
         UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(ua.getId())
-                .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Doctor not linked to this account"));
 
         return addPatientToDoctor(doctorId, patientId);
     }
@@ -170,10 +170,10 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public void removePatientFromMyDoctor(UUID authId, UUID patientId) {
         UserAccount ua = userAccountRepository.findByAuthId(authId)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Account not found"));
 
         UUID doctorId = userAccountRepository.findDoctorIdByUserAccountId(ua.getId())
-                .orElseThrow(() -> new RuntimeException("Doctor not linked to this account"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Doctor not linked to this account"));
 
         removePatientFromDoctor(doctorId, patientId);
     }
