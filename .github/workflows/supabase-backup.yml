@@ -1,4 +1,4 @@
-funciname: Supabase Daily Backup
+name: Supabase Daily Backup
 
 on:
   schedule:
