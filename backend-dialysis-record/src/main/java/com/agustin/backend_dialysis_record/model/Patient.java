@@ -37,10 +37,6 @@ public class Patient {
     @Column(name = "concentration", nullable = false)
     private List<Float> customConcentrations = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doctor_id")
-    private Doctor doctor;
-
     @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<>();
 

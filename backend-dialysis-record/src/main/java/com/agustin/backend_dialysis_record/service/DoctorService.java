@@ -3,7 +3,7 @@ package com.agustin.backend_dialysis_record.service;
 import com.agustin.backend_dialysis_record.dto.DoctorDto;
 import com.agustin.backend_dialysis_record.dto.DoctorMeDto;
 import com.agustin.backend_dialysis_record.dto.PatientDto;
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 import java.util.UUID;

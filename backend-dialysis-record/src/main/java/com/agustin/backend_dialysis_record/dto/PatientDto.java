@@ -38,7 +38,5 @@ public class PatientDto {
     @Min(1)
     private Long number;
 
-    private String doctorName;
-    private UUID doctorId;
     private List<Float> customConcentrations = new ArrayList<>();
 }

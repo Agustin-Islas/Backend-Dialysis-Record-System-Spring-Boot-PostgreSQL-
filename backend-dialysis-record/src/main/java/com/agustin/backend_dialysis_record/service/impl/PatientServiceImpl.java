@@ -6,6 +6,7 @@ import com.agustin.backend_dialysis_record.mapper.PatientMapper;
 import com.agustin.backend_dialysis_record.model.Patient;
 import com.agustin.backend_dialysis_record.model.Session;
 import com.agustin.backend_dialysis_record.model.auth.UserAccount;
+import com.agustin.backend_dialysis_record.repository.DoctorPatientAccessRepository;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
 import com.agustin.backend_dialysis_record.service.PatientService;
@@ -25,12 +26,15 @@ public class PatientServiceImpl implements PatientService {
 
     private final PatientRepository patientRepository;
     private final UserAccountRepository userAccountRepository;
+    private final DoctorPatientAccessRepository doctorPatientAccessRepository;
     private final PatientMapper patientMapper;
     private final SessionServiceImpl sessionService;
+
     @Autowired
-    public PatientServiceImpl(PatientRepository patientRepository, UserAccountRepository userAccountRepository, PatientMapper patientMapper, SessionServiceImpl sessionService) {
+    public PatientServiceImpl(PatientRepository patientRepository, UserAccountRepository userAccountRepository, DoctorPatientAccessRepository doctorPatientAccessRepository, PatientMapper patientMapper, SessionServiceImpl sessionService) {
         this.patientRepository = patientRepository;
         this.userAccountRepository = userAccountRepository;
+        this.doctorPatientAccessRepository = doctorPatientAccessRepository;
         this.patientMapper = patientMapper;
         this.sessionService = sessionService;
     }
@@ -44,15 +48,34 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<PatientDto> findPatientsByDoctor(UUID doctorId) {
+        return doctorPatientAccessRepository.findByDoctorId(doctorId)
+                .stream()
+                .map(access -> patientMapper.toDto(access.getPatient()))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PatientDto findById(UUID id) {
         return patientRepository.findById(id).map(patientMapper::toDto)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + id));
     }
 
     @Override
-    public PatientDto create(PatientDto patientDto) {
+    public PatientDto create(PatientDto patientDto, UUID creatorDoctorId) {
         validateCustomConcentrations(patientDto.getCustomConcentrations());
         Patient savePatient = patientRepository.save(patientMapper.toEntity(patientDto));
+        
+        if (creatorDoctorId != null) {
+            com.agustin.backend_dialysis_record.model.Doctor doctor = new com.agustin.backend_dialysis_record.model.Doctor();
+            doctor.setId(creatorDoctorId);
+            com.agustin.backend_dialysis_record.model.DoctorPatientAccess access = new com.agustin.backend_dialysis_record.model.DoctorPatientAccess();
+            access.setDoctor(doctor);
+            access.setPatient(savePatient);
+            doctorPatientAccessRepository.save(access);
+        }
+        
         return patientMapper.toDto(savePatient);
     }
 
@@ -112,13 +135,20 @@ public class PatientServiceImpl implements PatientService {
         dto.setDateOfBirth(base.getDateOfBirth());
         dto.setAddress(base.getAddress());
         dto.setNumber(base.getNumber());
-        dto.setDoctorId(base.getDoctorId());
-        dto.setDoctorName(base.getDoctorName());
         dto.setCustomConcentrations(base.getCustomConcentrations());
 
         //by user
         dto.setEmail(ua.getEmail());
         dto.setRole(ua.getRole());
+
+        //by access
+        var accesses = doctorPatientAccessRepository.findByPatientId(patientId);
+        if (!accesses.isEmpty()) {
+            String names = accesses.stream()
+                .map(a -> a.getDoctor().getName() + " " + a.getDoctor().getSurname())
+                .collect(java.util.stream.Collectors.joining(", "));
+            dto.setDoctorName(names);
+        }
 
         return dto;
     }

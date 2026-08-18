@@ -12,7 +12,7 @@ import com.agustin.backend_dialysis_record.repository.DoctorRepository;
 import com.agustin.backend_dialysis_record.repository.PatientRepository;
 import com.agustin.backend_dialysis_record.repository.UserAccountRepository;
 import com.agustin.backend_dialysis_record.service.DoctorService;
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,16 +29,18 @@ public class DoctorServiceImpl implements DoctorService {
     private final DoctorMapper doctorMapper;
     private final PatientMapper patientMapper;
     private final PatientServiceImpl patientService;
+    private final com.agustin.backend_dialysis_record.repository.DoctorPatientAccessRepository accessRepository;
 
     @Autowired
     public DoctorServiceImpl(DoctorRepository doctorRepository, PatientRepository patientRepository, UserAccountRepository userAccountRepository, DoctorMapper doctorMapper,
-                             PatientMapper patientMapper, PatientServiceImpl patientService) {
+                             PatientMapper patientMapper, PatientServiceImpl patientService, com.agustin.backend_dialysis_record.repository.DoctorPatientAccessRepository accessRepository) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.userAccountRepository = userAccountRepository;
         this.doctorMapper = doctorMapper;
         this.patientService = patientService;
         this.patientMapper = patientMapper;
+        this.accessRepository = accessRepository;
     }
 
     @Override
@@ -90,8 +92,12 @@ public class DoctorServiceImpl implements DoctorService {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + patientId));
 
-        doctor.addPatient(patient);
-        patientRepository.save(patient);
+        if (!accessRepository.existsByDoctorIdAndPatientId(doctorId, patientId)) {
+            com.agustin.backend_dialysis_record.model.DoctorPatientAccess access = new com.agustin.backend_dialysis_record.model.DoctorPatientAccess();
+            access.setDoctor(doctor);
+            access.setPatient(patient);
+            accessRepository.save(access);
+        }
 
         return patientMapper.toDto(patient);
     }
@@ -99,22 +105,15 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     @Transactional(readOnly = true)
     public List<PatientDto> getPatientsByDoctor(UUID doctorId) {
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
-
-        return doctor.getPatients()
-                .stream().map(patientMapper::toDto).toList();
+        return accessRepository.findByDoctorId(doctorId).stream()
+                .map(access -> patientMapper.toDto(access.getPatient()))
+                .toList();
     }
 
     @Override
     public void removePatientFromDoctor(UUID doctorId, UUID patientId) {
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
-
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new RuntimeException("Patient not found with id: " + patientId));
-
-        doctor.removePatient(patient);
+        accessRepository.findByDoctorIdAndPatientId(doctorId, patientId)
+                .ifPresent(accessRepository::delete);
     }
 
     @Override
@@ -138,10 +137,11 @@ public class DoctorServiceImpl implements DoctorService {
         dto.setId(base.getId());
         dto.setName(base.getName());
         dto.setSurname(base.getSurname());
-        dto.setPatientIds(base.getPatientIds());
         dto.setEmail(ua.getEmail());
         dto.setRole(ua.getRole());
-        dto.setPatientCount(base.getPatientIds() == null ? 0 : base.getPatientIds().size());
+        
+        List<PatientDto> patients = getPatientsByDoctor(doctorId);
+        dto.setPatientCount(patients.size());
         return dto;
     }
 

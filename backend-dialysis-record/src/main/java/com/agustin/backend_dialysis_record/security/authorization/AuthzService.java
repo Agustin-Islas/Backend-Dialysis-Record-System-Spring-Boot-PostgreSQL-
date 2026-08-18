@@ -16,13 +16,16 @@ public class AuthzService {
     private final UserAccountRepository userAccountRepository;
     private final PatientRepository patientRepository;
     private final SessionRepository sessionRepository;
+    private final com.agustin.backend_dialysis_record.repository.DoctorPatientAccessRepository doctorPatientAccessRepository;
 
     public AuthzService(UserAccountRepository userAccountRepository,
                         PatientRepository patientRepository,
-                        SessionRepository sessionRepository) {
+                        SessionRepository sessionRepository,
+                        com.agustin.backend_dialysis_record.repository.DoctorPatientAccessRepository doctorPatientAccessRepository) {
         this.userAccountRepository = userAccountRepository;
         this.patientRepository = patientRepository;
         this.sessionRepository = sessionRepository;
+        this.doctorPatientAccessRepository = doctorPatientAccessRepository;
     }
 
     // ── Helpers de rol (para @PreAuthorize en endpoints de listado/admin) ──
@@ -39,6 +42,12 @@ public class AuthzService {
         if (ua == null) return false;
         String role = ua.getRole().name();
         return "DOCTOR".equals(role) || "ADMIN".equals(role);
+    }
+
+    /** Retorna true si el usuario autenticado tiene rol PATIENT. */
+    public boolean isPatient() {
+        UserAccount ua = getCurrentUserAccount();
+        return ua != null && "PATIENT".equals(ua.getRole().name());
     }
 
     // ── Acceso granular por recurso ──
@@ -65,7 +74,7 @@ public class AuthzService {
 
         if ("DOCTOR".equals(userAccount.getRole().name())) {
             if (userAccount.getDoctor() == null) return false;
-            return patientRepository.existsByIdAndDoctor_Id(patientId, userAccount.getDoctor().getId());
+            return doctorPatientAccessRepository.existsByDoctorIdAndPatientId(userAccount.getDoctor().getId(), patientId);
         }
 
         if ("PATIENT".equals(userAccount.getRole().name())) {

@@ -9,4 +9,5 @@ import lombok.Setter;
 public class PatientMeDto extends PatientDto {
     private String email;
     private UserRole role;
+    private String doctorName;
 }

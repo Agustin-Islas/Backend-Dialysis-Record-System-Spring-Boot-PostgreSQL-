@@ -33,13 +33,6 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patient.setAddress(patientDto.getAddress());
         patient.setNumber(patientDto.getNumber());
         patient.setCustomConcentrations(copyCustomConcentrations(patientDto));
-        if (patientDto.getDoctorId() != null) {
-            Doctor doctor = doctorRepository.getReferenceById(patientDto.getDoctorId());
-            patient.setDoctor(doctor);
-        } else {
-            patient.setDoctor(null);
-        }
-
         return patient;
     }
 
@@ -56,12 +49,6 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
         patientDto.setAddress(patient.getAddress());
         patientDto.setNumber(patient.getNumber());
         patientDto.setCustomConcentrations(new ArrayList<>(patient.getCustomConcentrations()));
-        if (patient.getDoctor() != null) {
-            patientDto.setDoctorName(patient.getDoctor().getName());
-            patientDto.setDoctorId(patient.getDoctor().getId());
-        } else {
-            patient.setDoctor(null);
-        }
         return patientDto;
     }
 
@@ -84,11 +71,8 @@ public class PatientMapper implements GenericMapper<Patient, PatientDto> {
             patient.getCustomConcentrations().addAll(patientDto.getCustomConcentrations());
         }
         
-        if (patientDto.getDoctorId() != null) {
-            Doctor doctor = doctorRepository.getReferenceById(patientDto.getDoctorId());
-            patient.setDoctor(doctor);
-        }
     }
+
 
     private ArrayList<Float> copyCustomConcentrations(PatientDto patientDto) {
         return new ArrayList<>(patientDto.getCustomConcentrations() == null ? Collections.emptyList() : patientDto.getCustomConcentrations());

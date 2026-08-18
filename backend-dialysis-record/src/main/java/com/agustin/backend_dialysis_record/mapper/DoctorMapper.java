@@ -39,14 +39,6 @@ public class DoctorMapper implements GenericMapper<Doctor, DoctorDto> {
         doctorDto.setName(doctor.getName());
         doctorDto.setSurname(doctor.getSurname());
 
-        List<UUID> patientIds = new ArrayList<>();
-        if (doctor.getPatients() != null && !doctor.getPatients().isEmpty()) {
-            for (Patient patient: doctor.getPatients()) {
-                patientIds.add(patient.getId());
-            }
-        }
-        doctorDto.setPatientIds(patientIds);
-
         return doctorDto;
     }
 
@@ -57,16 +49,6 @@ public class DoctorMapper implements GenericMapper<Doctor, DoctorDto> {
         }
         doctor.setName(doctorDto.getName());
         doctor.setSurname(doctorDto.getSurname());
-
-        if (doctorDto.getPatientIds() != null) {
-            List<Patient> patients = patientRepository.findAllById(doctorDto.getPatientIds());
-            doctor.setPatients(patients);
-
-            // Keep the bidirectional relationship consistent
-            for (Patient patient : patients) {
-                patient.setDoctor(doctor);
-            }
-        }
 
     }
 }

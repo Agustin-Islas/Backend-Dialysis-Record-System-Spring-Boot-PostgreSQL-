@@ -26,18 +26,7 @@ public class Doctor {
     private String name;
     private String surname;
 
-    @OneToMany(mappedBy = "doctor", fetch = FetchType.LAZY)
-    private List<Patient> patients = new ArrayList<>();
 
-    public void addPatient(Patient patient) {
-        patients.add(patient);
-        patient.setDoctor(this);
-    }
-
-    public void removePatient(Patient patient) {
-        patient.setDoctor(null);
-        patients.remove(patient);
-    }
 
     @PrePersist
     public void prePersist() {
